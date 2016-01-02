@@ -10,6 +10,7 @@ import Control.Monad.State
 import qualified Data.Map as M
 
 data Unit = Settler | Militia
+    deriving Eq
 
 unit_cost :: Unit -> Int
 unit_cost Settler = 40
@@ -60,6 +61,9 @@ food_capacity people = 10 * (people + 1) -- Civ 1 rules.
 -- Ignore output of gold or research for now
 -- TODO: Things to find out:
 -- - Do starvation or growth affect that turn's shield production?
+-- - In what order is population decline from building a settler
+--   checked vs growth from having lots of food?  Can building a
+--   settler lead to a temporarily overfull food box?
 grow :: Resources -> Unit -> City -> (Maybe Unit, City)
 grow increment order city = runState act city where
     act :: State City (Maybe Unit)
@@ -87,6 +91,11 @@ grow increment order city = runState act city where
     maybe_produce = do
       shields <- use $ stored Shield
       if shields >= unit_cost order then do
-         stored Shield .= 0
-         return $ Just order
+        stored Shield .= 0
+        built_settler_check
+        return $ Just order
       else return Nothing
+
+    built_settler_check = if order == Settler then do
+      pop -= 1 -- Civ 1 rules
+    else return ()
