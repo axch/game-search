@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -8,6 +9,7 @@ module City where
 import Control.Lens
 import Control.Monad.State
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 data Unit = Settler | Militia
     deriving Eq
@@ -17,9 +19,10 @@ unit_cost Settler = 40
 unit_cost Militia = 10
 
 data Resource = Food | Shield | Trade | Gold | Bulb
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 newtype Stack a = Stack { _stack_things :: (M.Map a Int) }
+    deriving (Eq, Ord, Show)
 
 makeLenses ''Stack
 
@@ -37,9 +40,23 @@ instance (Ord a) => Ixed (Stack a) where
 instance (Ord a) => At (Stack a) where
     at index = stack_things . at index
 
+instance (Ord a) => Monoid (Stack a) where
+    mempty = Stack M.empty
+    mappend = (+)
+
+one :: a -> Stack a
+one x = Stack $ M.singleton x 1
+
+two :: a -> Stack a
+two x = Stack $ M.singleton x 2
+
 type Resources = Stack Resource
 
 data Tile = Tile { production :: Resources }
+
+forest, grassland :: Tile
+forest = Tile $ one Food + two Shield
+grassland = Tile $ two Food
 
 data City = City { _center :: Tile
                  , _available :: [Tile]
@@ -99,3 +116,26 @@ grow increment order city = runState act city where
     built_settler_check = if order == Settler then do
       pop -= 1 -- Civ 1 rules
     else return ()
+
+-- May need to think about specialists' auto-happiness
+production_orders :: City -> S.Set Resources
+production_orders City{..} = S.map (+ production _center) options where
+    options = chooseMonoid _pop $ map production _available
+
+-- Choose exactly k elements from the list of options; combine them;
+-- and eliminate duplicates
+chooseMonoid :: (Eq m, Ord m, Monoid m) => Int -> [m] -> S.Set m
+chooseMonoid 0 _ = S.singleton mempty
+chooseMonoid _ [] = S.empty
+chooseMonoid k (opt:opts) = take `S.union` leave where
+    take = S.map (mappend opt) $ chooseMonoid (k-1) opts
+    leave = chooseMonoid k opts
+
+-- chooseMonoid 3 $ [[], [1], [2,3] ,[4]]
+-- fromList [[1,2,3],[1,2,3,4],[1,4],[2,3,4]]
+
+-- production_orders $ City forest [forest] 1 mempty
+-- fromList [Stack {_stack_things = fromList [(Food,2),(Shield,4)]}]
+
+-- production_orders $ City forest [forest, forest, grassland] 2 mempty
+-- fromList [Stack {_stack_things = fromList [(Food,3),(Shield,6)]},Stack {_stack_things = fromList [(Food,4),(Shield,4)]}]
