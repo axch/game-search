@@ -12,7 +12,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 data Unit = Settler | Militia
-    deriving Eq
+    deriving (Eq, Ord, Show)
 
 unit_cost :: Unit -> Int
 unit_cost Settler = 40
@@ -46,6 +46,7 @@ two x = Stack $ M.singleton x 2
 type Resources = Stack Resource
 
 data Tile = Tile { production :: Resources }
+    deriving (Eq, Ord, Show)
 
 forest, grassland :: Tile
 forest = Tile $ one Food `mappend` two Shield
@@ -56,6 +57,7 @@ data City = City { _center :: Tile
                  , _pop :: Int
                  , _storage :: Resources
                  }
+    deriving (Eq, Ord, Show)
 
 makeLenses ''City
 
@@ -132,3 +134,14 @@ chooseMonoid k (opt:opts) = take `S.union` leave where
 
 -- production_orders $ City forest [forest, forest, grassland] 2 mempty
 -- fromList [Stack {_stack_things = fromList [(Food,3),(Shield,6)]},Stack {_stack_things = fromList [(Food,4),(Shield,4)]}]
+
+bind' :: (Ord b) => S.Set a -> (a -> S.Set b) -> S.Set b
+bind' opts f = S.unions $ map f $ S.toList opts
+
+return' :: a -> S.Set a
+return' = S.singleton
+
+possible_turns :: City -> S.Set (Maybe Unit, City)
+possible_turns c = production_orders c `bind'` \prod ->
+  S.fromList [Settler, Militia] `bind'` \unit ->
+  return' $ grow prod unit c
