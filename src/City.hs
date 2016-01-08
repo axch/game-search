@@ -9,6 +9,7 @@ module City where
 import Control.Lens
 import Control.Monad.State
 import qualified Data.Map as M
+import Data.Maybe (fromJust)
 import qualified Data.Set as S
 
 data Unit = Settler | Militia
@@ -154,3 +155,22 @@ possible_turns c = production_orders c `bind'` \prod ->
 -- possible_turns $ City forest [forest, forest, grassland] 2 mempty
 -- - two possibilities, no construction, either 6 shields and lose a
 --   person or 4 shields and don't
+
+-- Compute the results from the best production sequence of k turns
+-- from a given starting city.
+best_score :: Int -> City -> Int
+best_score 0 _ = 0
+best_score k city = S.foldr' max 0 results where
+  results = turns `bind'` \(unit, city') ->
+    return' $ score unit + answer city'
+  score Nothing = 0
+  score (Just Settler) = 1
+  score (Just Militia) = 0
+  turns = possible_turns city
+  answer = pre_memoize (S.map snd turns) $ best_score (k-1)
+
+pre_memoize :: (Ord a) => S.Set a -> (a -> r) -> a -> r
+pre_memoize inputs f = get where
+    get x = fromJust $ M.lookup x answers
+    answers = M.fromList $ map answer $ S.toList inputs
+    answer x = (x, f x)
