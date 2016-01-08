@@ -8,9 +8,10 @@ module City where
 
 import Control.Lens
 import Control.Monad.State
+import Data.IORef
 import qualified Data.Map as M
-import Data.Maybe (fromJust)
 import qualified Data.Set as S
+import System.IO.Unsafe
 
 data Unit = Settler | Militia
     deriving (Eq, Ord, Show)
@@ -159,18 +160,30 @@ possible_turns c = production_orders c `bind'` \prod ->
 -- Compute the results from the best production sequence of k turns
 -- from a given starting city.
 best_score :: Int -> City -> Int
-best_score 0 _ = 0
-best_score k city = S.foldr' max 0 results where
-  results = turns `bind'` \(unit, city') ->
-    return' $ score unit + answer city'
+best_score 0 = const 0
+best_score k = go where
+  go city = S.foldr' max 0 results
+      where
+        results = possible_turns city `bind'` (\(unit, city') ->
+          return' $ score unit + answer city')
   score Nothing = 0
   score (Just Settler) = 1
   score (Just Militia) = 0
-  turns = possible_turns city
-  answer = pre_memoize (S.map snd turns) $ best_score (k-1)
+  answer = memoize $ best_score (k-1)
 
-pre_memoize :: (Ord a) => S.Set a -> (a -> r) -> a -> r
-pre_memoize inputs f = get where
-    get x = fromJust $ M.lookup x answers
-    answers = M.fromList $ map answer $ S.toList inputs
-    answer x = (x, f x)
+memoize :: (Ord a) => (a -> r) -> a -> r
+memoize f = unsafePerformIO (do
+  cacheRef <- newIORef M.empty
+  return $ \x -> unsafePerformIO (do
+                   cache <- readIORef cacheRef
+                   case M.lookup x cache of
+                     (Just v) -> return v
+                     Nothing -> do
+                       let v = f x
+                       modifyIORef' cacheRef (M.insert x v)
+                       return v))
+
+-- Preliminary results
+-- best_score 100 $ City forest [forest, forest, grassland] 1 mempty
+-- 7
+-- (10.94 secs, 5,471,597,824 bytes)
