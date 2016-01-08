@@ -81,9 +81,14 @@ grow increment order city = runState act city where
     act :: State City (Maybe Unit)
     act = do
       storage <>= increment
+      feed_populace
       starve_check
       grow_check
       maybe_produce
+
+    feed_populace = do
+      population <- use pop
+      stored Food -= (population * 2)
 
     starve_check = do
       food <- use $ stored Food
@@ -145,3 +150,7 @@ possible_turns :: City -> S.Set (Maybe Unit, City)
 possible_turns c = production_orders c `bind'` \prod ->
   S.fromList [Settler, Militia] `bind'` \unit ->
   return' $ grow prod unit c
+
+-- possible_turns $ City forest [forest, forest, grassland] 2 mempty
+-- - two possibilities, no construction, either 6 shields and lose a
+--   person or 4 shields and don't
