@@ -26,13 +26,6 @@ newtype Stack a = Stack { _stack_things :: (M.Map a Int) }
 
 makeLenses ''Stack
 
-instance (Ord a) => Num (Stack a) where
-    (Stack m1) + (Stack m2) = Stack $ M.unionWith (+) m1 m2
-    negate (Stack m1) = Stack $ fmap negate m1
-    abs (Stack m1) = Stack $ fmap abs m1
-    -- No *, signum, or fromInteger, because it's really vector
-    -- addition I want here.
-
 type instance Index (Stack a) = a
 type instance IxValue (Stack a) = Int
 instance (Ord a) => Ixed (Stack a) where
@@ -42,7 +35,7 @@ instance (Ord a) => At (Stack a) where
 
 instance (Ord a) => Monoid (Stack a) where
     mempty = Stack M.empty
-    mappend = (+)
+    (Stack m1) `mappend` (Stack m2) = Stack $ M.unionWith (+) m1 m2
 
 one :: a -> Stack a
 one x = Stack $ M.singleton x 1
@@ -55,7 +48,7 @@ type Resources = Stack Resource
 data Tile = Tile { production :: Resources }
 
 forest, grassland :: Tile
-forest = Tile $ one Food + two Shield
+forest = Tile $ one Food `mappend` two Shield
 grassland = Tile $ two Food
 
 data City = City { _center :: Tile
@@ -85,7 +78,7 @@ grow :: Resources -> Unit -> City -> (Maybe Unit, City)
 grow increment order city = runState act city where
     act :: State City (Maybe Unit)
     act = do
-      storage += increment
+      storage <>= increment
       starve_check
       grow_check
       maybe_produce
@@ -119,7 +112,7 @@ grow increment order city = runState act city where
 
 -- May need to think about specialists' auto-happiness
 production_orders :: City -> S.Set Resources
-production_orders City{..} = S.map (+ production _center) options where
+production_orders City{..} = S.map (mappend $ production _center) options where
     options = chooseMonoid _pop $ map production _available
 
 -- Choose exactly k elements from the list of options; combine them;
