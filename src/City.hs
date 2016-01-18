@@ -13,6 +13,9 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import System.IO.Unsafe
 
+import Rig hiding (one) -- Wanted to use Kmett's algebra package, but it wouldn't install
+import qualified Rig
+
 data Unit = Settler | Militia
     deriving (Eq, Ord, Show)
 
@@ -122,15 +125,19 @@ grow increment order city = runState act city where
 -- May need to think about specialists' auto-happiness
 production_orders :: City -> S.Set Resources
 production_orders City{..} = S.map (mappend $ production _center) options where
-    options = chooseMonoid _pop $ map production _available
+    options = asSet $ chooseMonoid _pop $ zip (map production _available) $ repeat ()
+    asSet :: (Eq k) => M.Map k () -> S.Set k
+    asSet m = S.fromAscList $ M.keys m
 
 -- Choose exactly k elements from the list of options; combine them;
--- and eliminate duplicates
-chooseMonoid :: (Eq m, Ord m, Monoid m) => Int -> [m] -> S.Set m
-chooseMonoid 0 _ = S.singleton mempty
-chooseMonoid _ [] = S.empty
-chooseMonoid k (opt:opts) = take `S.union` leave where
-    take = S.map (mappend opt) $ chooseMonoid (k-1) opts
+-- and eliminate duplicates.  Accumulate annotations as map values
+chooseMonoid :: (Eq m, Ord m, Monoid m, Rig ann) =>
+                Int -> [(m,ann)] -> M.Map m ann
+chooseMonoid 0 _ = M.singleton mempty Rig.one
+chooseMonoid _ [] = M.empty
+chooseMonoid k ((opt,ann):opts) = M.unionWith (.+.) take leave where
+    take = M.mapKeysWith (.+.) (mappend opt) $ M.map (ann .*.)
+           $ chooseMonoid (k-1) opts
     leave = chooseMonoid k opts
 
 -- chooseMonoid 3 $ [[], [1], [2,3] ,[4]]
