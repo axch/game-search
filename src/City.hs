@@ -15,6 +15,7 @@ import System.IO.Unsafe
 
 import Rig hiding (one) -- Wanted to use Kmett's algebra package, but it wouldn't install
 import qualified Rig
+import Searches
 
 data Unit = Settler | Militia
     deriving (Eq, Ord, Show)
@@ -124,30 +125,16 @@ grow increment order city = runState act city where
 
 -- May need to think about specialists' auto-happiness
 production_orders :: City -> S.Set Resources
-production_orders City{..} = S.map (mappend $ production _center) options where
-    options = asSet $ chooseMonoid _pop $ zip (map production _available) $ repeat ()
-    asSet :: (Eq k) => M.Map k () -> S.Set k
-    asSet m = S.fromAscList $ M.keys m
-
--- Choose exactly k elements from the list of options; combine them;
--- and eliminate duplicates.  Accumulate annotations as map values
-chooseMonoid :: (Eq m, Ord m, Monoid m, Rig ann) =>
-                Int -> [(m,ann)] -> M.Map m ann
-chooseMonoid 0 _ = M.singleton mempty Rig.one
-chooseMonoid _ [] = M.empty
-chooseMonoid k ((opt,ann):opts) = M.unionWith (.+.) take leave where
-    take = M.mapKeysWith (.+.) (mappend opt) $ M.map (ann .*.)
-           $ chooseMonoid (k-1) opts
-    leave = chooseMonoid k opts
-
--- chooseMonoid 3 $ [[], [1], [2,3] ,[4]]
--- fromList [[1,2,3],[1,2,3,4],[1,4],[2,3,4]]
+production_orders City{..} = asSet $ prod _center .*. options where
+    options = chooseRig _pop $ map prod _available
+    prod tile = SetOf $ S.singleton $ production tile
 
 -- production_orders $ City forest [forest] 1 mempty
 -- fromList [Stack {_stack_things = fromList [(Food,2),(Shield,4)]}]
 
 -- production_orders $ City forest [forest, forest, grassland] 2 mempty
--- fromList [Stack {_stack_things = fromList [(Food,3),(Shield,6)]},Stack {_stack_things = fromList [(Food,4),(Shield,4)]}]
+-- fromList [Stack {_stack_things = fromList [(Food,3),(Shield,6)]},
+--           Stack {_stack_things = fromList [(Food,4),(Shield,4)]}]
 
 bind' :: (Ord b) => S.Set a -> (a -> S.Set b) -> S.Set b
 bind' opts f = S.unions $ map f $ S.toList opts
