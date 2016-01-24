@@ -29,7 +29,7 @@ instance (Eq m, Ord m, Monoid m) => Rig (SetOf m) where
 
 -- Set of values m annotated with annotations ann.  Combination is
 -- monoidal with deduplication on m, with by Rig operations on ann.
-newtype Annotated m ann = Annotated (M.Map m ann)
+newtype Annotated m ann = Annotated { asMap :: (M.Map m ann) }
 
 instance (Eq m, Ord m, Monoid m, Rig ann) => Rig (Annotated m ann) where
     zero = Annotated $ M.empty

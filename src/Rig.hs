@@ -50,3 +50,14 @@ instance Rig Bool where
   one = True
   (.+.) = (||)
   (.*.) = (&&)
+
+newtype MaxPlus a = MaxPlus a
+    deriving Show
+
+-- This is not free: the monoid operation needs to distribute over the
+-- order.
+instance (Bounded a, Ord a, Monoid a) => Rig (MaxPlus a) where
+    zero = MaxPlus minBound
+    one = MaxPlus mempty
+    (MaxPlus a1) .+. (MaxPlus a2) = MaxPlus $ a1 `max` a2
+    (MaxPlus a1) .*. (MaxPlus a2) = MaxPlus $ a1 `mappend` a2

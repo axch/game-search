@@ -9,12 +9,12 @@ module City where
 import Control.Lens
 import Control.Monad.State
 import Data.IORef
+import Data.List
 import qualified Data.Map as M
 import qualified Data.Set as S
 import System.IO.Unsafe
 
 import Rig hiding (one) -- Wanted to use Kmett's algebra package, but it wouldn't install
-import qualified Rig
 import Searches
 
 data Unit = Settler | Militia
@@ -43,6 +43,10 @@ instance (Ord a) => Monoid (Stack a) where
     mempty = Stack M.empty
     (Stack m1) `mappend` (Stack m2) = Stack $ M.unionWith (+) m1 m2
 
+instance Bounded (Stack a) where
+    minBound = Stack M.empty
+    maxBound = undefined
+
 one :: a -> Stack a
 one x = Stack $ M.singleton x 1
 
@@ -51,12 +55,13 @@ two x = Stack $ M.singleton x 2
 
 type Resources = Stack Resource
 
-data Tile = Tile { production :: Resources }
+data Tile = Tile { name :: String
+                 , production :: Resources }
     deriving (Eq, Ord, Show)
 
 forest, grassland :: Tile
-forest = Tile $ one Food `mappend` two Shield
-grassland = Tile $ two Food
+forest = Tile "forest" $ one Food `mappend` two Shield
+grassland = Tile "grassland" $ two Food
 
 data City = City { _center :: Tile
                  , _available :: [Tile]
@@ -131,6 +136,11 @@ production_orders' prod City{..} = prod _center .*. options where
 production_orders :: City -> S.Set Resources
 production_orders = asSet . production_orders' (SetOf . S.singleton . production)
 
+production_orders_ann :: City -> M.Map Resources (MaxPlus (Stack String))
+production_orders_ann = asMap . production_orders' prod where
+    prod tile = Annotated $ M.singleton (production tile) (annotate tile)
+    annotate = MaxPlus . one . name
+
 -- production_orders $ City forest [forest] 1 mempty
 -- fromList [Stack {_stack_things = fromList [(Food,2),(Shield,4)]}]
 
@@ -138,11 +148,21 @@ production_orders = asSet . production_orders' (SetOf . S.singleton . production
 -- fromList [Stack {_stack_things = fromList [(Food,3),(Shield,6)]},
 --           Stack {_stack_things = fromList [(Food,4),(Shield,4)]}]
 
+-- similarly production_orders_ann
+
 bind' :: (Ord b) => S.Set a -> (a -> S.Set b) -> S.Set b
 bind' opts f = S.unions $ map f $ S.toList opts
 
 return' :: a -> S.Set a
 return' = S.singleton
+
+bind_ann :: (Ord b, Monoid b, Rig ann2) => M.Map a ann ->
+            (a -> ann -> M.Map b ann2) -> M.Map b ann2
+bind_ann opts f = asMap $ foldl' (.+.) zero $ map (Annotated . uncurry f)
+                  $ M.toList opts
+
+return_ann :: a -> ann -> M.Map a ann
+return_ann = M.singleton
 
 possible_turns :: City -> S.Set (Maybe Unit, City)
 possible_turns c = production_orders c `bind'` \prod ->
