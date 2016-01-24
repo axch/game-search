@@ -123,11 +123,13 @@ grow increment order city = runState act city where
       pop -= 1 -- Civ 1 rules
     else return ()
 
+production_orders' :: (Rig r) => (Tile -> r) -> City -> r
+production_orders' prod City{..} = prod _center .*. options where
+    options = chooseRig _pop $ map prod _available
+
 -- May need to think about specialists' auto-happiness
 production_orders :: City -> S.Set Resources
-production_orders City{..} = asSet $ prod _center .*. options where
-    options = chooseRig _pop $ map prod _available
-    prod tile = SetOf $ S.singleton $ production tile
+production_orders = asSet . production_orders' (SetOf . S.singleton . production)
 
 -- production_orders $ City forest [forest] 1 mempty
 -- fromList [Stack {_stack_things = fromList [(Food,2),(Shield,4)]}]
