@@ -28,28 +28,34 @@ module Rig where
 -- > zero .*. a  ==  zero
 -- > a .*. zero  ==  zero
 class Rig s where
-  zero, one    :: s
-  (.+.), (.*.) :: s -> s -> s
+    zero, one    :: s
+    (.+.), (.*.) :: s -> s -> s
 
 newtype NumRig a = NumRig a
 
 instance Num a => Rig (NumRig a) where
-  zero = NumRig 0
-  one = NumRig 1
-  (NumRig x) .+. (NumRig y) = NumRig $ x + y
-  (NumRig x) .*. (NumRig y) = NumRig $ x * y
+    zero = NumRig 0
+    one = NumRig 1
+    (NumRig x) .+. (NumRig y) = NumRig $ x + y
+    (NumRig x) .*. (NumRig y) = NumRig $ x * y
 
 instance Rig () where
-  zero = ()
-  one = ()
-  _ .+. _ = ()
-  _ .*. _ = ()
+    zero = ()
+    one = ()
+    _ .+. _ = ()
+    _ .*. _ = ()
 
 instance Rig Bool where
-  zero = False
-  one = True
-  (.+.) = (||)
-  (.*.) = (&&)
+    zero = False
+    one = True
+    (.+.) = (||)
+    (.*.) = (&&)
+
+instance (Rig a, Rig b) => Rig (a, b) where
+    zero = (zero, zero)
+    one = (one, one)
+    (a1, b1) .+. (a2, b2) = (a1 .+. a2, b1 .+. b2)
+    (a1, b1) .*. (a2, b2) = (a1 .*. a2, b1 .*. b2)
 
 newtype MaxPlus a = MaxPlus a
     deriving Show
