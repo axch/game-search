@@ -75,6 +75,9 @@ instance (Bounded r, Ord r, Monoid r, Rig ann) => Rig (MaxPlusA r ann) where
     zero = MaxPlusA minBound zero
     one = MaxPlusA mempty one
     (MaxPlusA r1 ann1) .+. (MaxPlusA r2 ann2) =
-        MaxPlusA (r1 `max` r2) $ ann1 .+. ann2
+        case r1 `compare` r2 of
+          GT -> MaxPlusA r1 ann1
+          LT -> MaxPlusA r2 ann2
+          EQ -> MaxPlusA r1 $ ann1 .+. ann2
     (MaxPlusA r1 ann1) .*. (MaxPlusA r2 ann2) =
         MaxPlusA (r1 `mappend` r2) $ ann1 .*. ann2
