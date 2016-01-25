@@ -58,7 +58,7 @@ instance (Rig a, Rig b) => Rig (a, b) where
     (a1, b1) .*. (a2, b2) = (a1 .*. a2, b1 .*. b2)
 
 newtype MaxPlus a = MaxPlus a
-    deriving Show
+    deriving (Eq, Ord, Show)
 
 -- This is not free: the monoid operation needs to distribute over the
 -- order.
@@ -67,3 +67,14 @@ instance (Bounded a, Ord a, Monoid a) => Rig (MaxPlus a) where
     one = MaxPlus mempty
     (MaxPlus a1) .+. (MaxPlus a2) = MaxPlus $ a1 `max` a2
     (MaxPlus a1) .*. (MaxPlus a2) = MaxPlus $ a1 `mappend` a2
+
+data MaxPlusA r ann = MaxPlusA r ann
+    deriving (Eq, Ord, Show)
+
+instance (Bounded r, Ord r, Monoid r, Rig ann) => Rig (MaxPlusA r ann) where
+    zero = MaxPlusA minBound zero
+    one = MaxPlusA mempty one
+    (MaxPlusA r1 ann1) .+. (MaxPlusA r2 ann2) =
+        MaxPlusA (r1 `max` r2) $ ann1 .+. ann2
+    (MaxPlusA r1 ann1) .*. (MaxPlusA r2 ann2) =
+        MaxPlusA (r1 `mappend` r2) $ ann1 .*. ann2

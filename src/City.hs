@@ -11,10 +11,12 @@ import Control.Monad.State
 import Data.IORef
 import Data.List
 import qualified Data.Map as M
+import Data.Monoid
 import qualified Data.Set as S
 import System.IO.Unsafe
 
 import Rig hiding (one) -- Wanted to use Kmett's algebra package, but it wouldn't install
+import qualified Rig (one)
 import Searches
 
 data Unit = Settler | Militia
@@ -45,6 +47,10 @@ instance (Ord a) => Monoid (Stack a) where
 
 instance Bounded (Stack a) where
     minBound = Stack M.empty
+    maxBound = undefined
+
+instance Bounded [a] where
+    minBound = []
     maxBound = undefined
 
 one :: a -> Stack a
@@ -164,6 +170,9 @@ bind_ann opts f = foldl' (M.unionWith (.+.)) M.empty $ map (uncurry f)
 return_ann :: a -> ann -> M.Map a ann
 return_ann = M.singleton
 
+bind_ann_r :: (Rig r) => M.Map a ann -> (a -> ann -> r) -> r
+bind_ann_r opts f = foldl' (.+.) zero $ map (uncurry f) $ M.toList opts
+
 possible_turns :: City -> S.Set (Maybe Unit, City)
 possible_turns c = production_orders c `bind'` \prod ->
   S.fromList [Settler, Militia] `bind'` \unit ->
@@ -172,8 +181,9 @@ possible_turns c = production_orders c `bind'` \prod ->
 build_orders_ann :: M.Map Unit Unit
 build_orders_ann = M.fromList [(Settler, Settler), (Militia, Militia)]
 
-possible_turns_ann :: City -> M.Map (Maybe Unit, City) ((MaxPlus (Stack String)),
-                                                        (MaxPlus (Stack Unit)))
+type OrderSet = ((MaxPlus (Stack String)), (MaxPlus (Stack Unit)))
+
+possible_turns_ann :: City -> M.Map (Maybe Unit, City) OrderSet
 possible_turns_ann c = production_orders_ann c `bind_ann` \prod tiles ->
   build_orders_ann `bind_ann` \unit unit' ->
   return_ann (grow prod unit c) $ (tiles, MaxPlus $ one unit')
@@ -197,6 +207,16 @@ best_score k = go where
   score (Just Settler) = 1
   score (Just Militia) = 0
   answer = memoize $ best_score (k-1)
+
+best_score_ann :: Int -> City -> MaxPlusA (Sum Int) (MaxPlus [OrderSet])
+best_score_ann 0 = const Rig.one
+best_score_ann k = go where
+  go city = possible_turns_ann city `bind_ann_r` (\(unit, city') orders ->
+            (MaxPlusA (Sum $ score unit) $ MaxPlus [orders]) .*. answer city')
+  score Nothing = 0
+  score (Just Settler) = 1
+  score (Just Militia) = 0
+  answer = memoize $ best_score_ann (k-1)
 
 memoize :: (Ord a) => (a -> r) -> a -> r
 memoize f = unsafePerformIO (do
