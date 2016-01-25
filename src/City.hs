@@ -14,6 +14,7 @@ import qualified Data.Map as M
 import Data.Monoid
 import qualified Data.Set as S
 import System.IO.Unsafe
+import Text.Printf
 
 import Rig hiding (one) -- Wanted to use Kmett's algebra package, but it wouldn't install
 import qualified Rig (one)
@@ -59,11 +60,28 @@ one x = Stack $ M.singleton x 1
 two :: a -> Stack a
 two x = Stack $ M.singleton x 2
 
+class ShowShort a where
+    show_short :: a -> String
+
+instance ShowShort a => ShowShort (Stack a) where
+    show_short (Stack m) = intercalate "," $ map item $ M.toList m where
+        item (key, num) = show num ++ " " ++ show_short key
+
+asList :: Stack a -> [a]
+asList (Stack as) = concatMap groups $ M.toList as where
+    groups (a, ct) = take ct $ repeat a
+
+for :: (Monoid m) => (a -> m) -> Stack a -> m
+for f as = foldl' mappend mempty $ map f $ asList as
+
 type Resources = Stack Resource
 
 data Tile = Tile { name :: String
                  , production :: Resources }
     deriving (Eq, Ord, Show)
+
+instance ShowShort Tile where
+    show_short = name
 
 forest, grassland :: Tile
 forest = Tile "forest" $ one Food `mappend` two Shield
@@ -80,6 +98,10 @@ makeLenses ''City
 
 stored :: Resource -> Lens City City Int Int
 stored r = storage . at r . non 0
+
+instance ShowShort City where
+    show_short c = printf "pop: %2d food: %2d shields: %2d"
+                   (c ^. pop) (c ^. stored Food) (c ^. stored Shield)
 
 -- The amount of food necessary to grow one more person, for a given
 -- number of people present.
@@ -142,10 +164,10 @@ production_orders' prod City{..} = prod _center .*. options where
 production_orders :: City -> S.Set Resources
 production_orders = asSet . production_orders' (SetOf . S.singleton . production)
 
-production_orders_ann :: City -> M.Map Resources (MaxPlus (Stack String))
+production_orders_ann :: City -> M.Map Resources (MaxPlus (Stack Tile))
 production_orders_ann = asMap . production_orders' prod where
     prod tile = Annotated $ M.singleton (production tile) (annotate tile)
-    annotate = MaxPlus . one . name
+    annotate = MaxPlus . one
 
 -- production_orders $ City forest [forest] 1 mempty
 -- fromList [Stack {_stack_things = fromList [(Food,2),(Shield,4)]}]
@@ -181,7 +203,7 @@ possible_turns c = production_orders c `bind'` \prod ->
 build_orders_ann :: M.Map Unit Unit
 build_orders_ann = M.fromList [(Settler, Settler), (Militia, Militia)]
 
-type OrderSet = ((MaxPlus (Stack String)), (MaxPlus (Stack Unit)))
+type OrderSet = ((MaxPlus (Stack Tile)), (MaxPlus (Stack Unit)))
 
 possible_turns_ann :: City -> M.Map (Maybe Unit, City) OrderSet
 possible_turns_ann c = production_orders_ann c `bind_ann` \prod tiles ->
@@ -208,6 +230,11 @@ best_score k = go where
   score (Just Militia) = 0
   answer = memoize $ best_score (k-1)
 
+-- Preliminary results
+-- best_score 100 $ City forest [forest, forest, grassland] 1 mempty
+-- 7
+-- (10.94 secs, 5,471,597,824 bytes)
+
 best_score_ann :: Int -> City -> MaxPlusA (Sum Int) (MaxPlus [OrderSet])
 best_score_ann 0 = const Rig.one
 best_score_ann k = go where
@@ -217,6 +244,8 @@ best_score_ann k = go where
   score (Just Settler) = 1
   score (Just Militia) = 0
   answer = memoize $ best_score_ann (k-1)
+
+-- Similarly best_score_ann
 
 memoize :: (Ord a) => (a -> r) -> a -> r
 memoize f = unsafePerformIO (do
@@ -230,7 +259,20 @@ memoize f = unsafePerformIO (do
                        modifyIORef' cacheRef (M.insert x v)
                        return v))
 
+show_prod_seq :: City -> [OrderSet] -> String
+show_prod_seq city [] = show_short city
+show_prod_seq city ((MaxPlus tiles, MaxPlus (Stack units)):rest) = line ++ lines where
+    line = show_short city ++ " + " ++ show_short tiles ++ built_str ++ "\n"
+    (build_order, _) = M.findMin units
+    (built, city') = grow (production `for` tiles) build_order city
+    built_str = case built of
+                  Nothing -> ""
+                  (Just u) -> " -> " ++ show u
+    lines = show_prod_seq city' rest
+
+show_best_prod_seq :: Int -> City -> String
+show_best_prod_seq k c = show score ++ "\n" ++ show_prod_seq c orders where
+    (MaxPlusA (Sum score) (MaxPlus orders)) = best_score_ann k c
+
 -- Preliminary results
--- best_score 100 $ City forest [forest, forest, grassland] 1 mempty
--- 7
--- (10.94 secs, 5,471,597,824 bytes)
+-- putStrLn $ show_best_prod_seq 11 $ City forest [forest, forest, grassland] 1 mempty
