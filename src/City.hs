@@ -156,9 +156,9 @@ bind' opts f = S.unions $ map f $ S.toList opts
 return' :: a -> S.Set a
 return' = S.singleton
 
-bind_ann :: (Ord b, Monoid b, Rig ann2) => M.Map a ann ->
+bind_ann :: (Ord b, Rig ann2) => M.Map a ann ->
             (a -> ann -> M.Map b ann2) -> M.Map b ann2
-bind_ann opts f = asMap $ foldl' (.+.) zero $ map (Annotated . uncurry f)
+bind_ann opts f = foldl' (M.unionWith (.+.)) M.empty $ map (uncurry f)
                   $ M.toList opts
 
 return_ann :: a -> ann -> M.Map a ann
@@ -169,9 +169,20 @@ possible_turns c = production_orders c `bind'` \prod ->
   S.fromList [Settler, Militia] `bind'` \unit ->
   return' $ grow prod unit c
 
+build_orders_ann :: M.Map Unit Unit
+build_orders_ann = M.fromList [(Settler, Settler), (Militia, Militia)]
+
+possible_turns_ann :: City -> M.Map (Maybe Unit, City) ((MaxPlus (Stack String)),
+                                                        (MaxPlus (Stack Unit)))
+possible_turns_ann c = production_orders_ann c `bind_ann` \prod tiles ->
+  build_orders_ann `bind_ann` \unit unit' ->
+  return_ann (grow prod unit c) $ (tiles, MaxPlus $ one unit')
+
 -- possible_turns $ City forest [forest, forest, grassland] 2 mempty
 -- - two possibilities, no construction, either 6 shields and lose a
 --   person or 4 shields and don't
+
+-- similarly possible_turns_ann
 
 -- Compute the results from the best production sequence of k turns
 -- from a given starting city.
