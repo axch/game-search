@@ -221,6 +221,7 @@ possible_turns_ann c = production_orders_ann c `bind_ann` \prod tiles ->
 best_score :: Int -> City -> Int
 best_score 0 = const 0
 best_score k = go where
+  go City{_pop = 0} = 0
   go city = S.foldr' max 0 results
       where
         results = possible_turns city `bind'` (\(unit, city') ->
@@ -238,6 +239,7 @@ best_score k = go where
 best_score_ann :: Int -> City -> MaxPlusA (Sum Int) (MaxPlus [OrderSet])
 best_score_ann 0 = const Rig.one
 best_score_ann k = go where
+  go City{_pop = 0} = Rig.one
   go city = possible_turns_ann city `bind_ann_r` (\(unit, city') orders ->
             (MaxPlusA (Sum $ score unit) $ MaxPlus [orders]) .*. answer city')
   score Nothing = 0
