@@ -83,9 +83,10 @@ data Tile = Tile { name :: String
 instance ShowShort Tile where
     show_short = name
 
-forest, grassland :: Tile
+forest, grassland, grassland_sh :: Tile
 forest = Tile "forest" $ one Food `mappend` two Shield
 grassland = Tile "grassland" $ two Food
+grassland_sh = Tile "grassland_sh" $ two Food `mappend` one Shield
 
 data City = City { _center :: Tile
                  , _available :: [Tile]
@@ -277,4 +278,10 @@ show_best_prod_seq k c = show score ++ "\n" ++ show_prod_seq c orders where
     (MaxPlusA (Sum score) (MaxPlus orders)) = best_score_ann k c
 
 -- Preliminary results
--- putStrLn $ show_best_prod_seq 11 $ City forest [forest, forest, grassland] 1 mempty
+-- putStrLn $ show_best_prod_seq 100 $ City forest [forest, forest, grassland] 1 mempty
+-- 5 settlers, 12 seconds
+-- putStrLn $ show_best_prod_seq 96 $ City grassland_sh [forest, forest, grassland_sh] 1 mempty
+-- 7 settlers, 43 seconds
+-- putStrLn $ show_best_prod_seq 90 $ City grassland_sh [forest, forest, grassland_sh, grassland_sh] 1 mempty
+-- 7 settlers, 100 seconds
+-- Still builds one militia; is it possible to get 7 faster?
