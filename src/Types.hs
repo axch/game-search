@@ -3,6 +3,8 @@
 
 module Types where
 
+import Data.Maybe (isJust)
+
 import Data.Random (RVar)
 
 newtype Player = Player Int
@@ -13,6 +15,8 @@ class (Eq a, Move m) => Game a m | a -> m where
     moves :: a -> [m]
     move  :: m -> a -> (RVar a) -- Random if it's Nature's move; TODO: make the distribution enumerable
     start :: a
+    finished :: a -> Bool
+    finished a = isJust $ payoff (Player 0) a
     payoff :: Player -> a -> Maybe Double -- Nothing if the game isn't over yet
     current :: a -> Player
 
