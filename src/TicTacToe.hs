@@ -15,10 +15,10 @@ import Types
 type Mask = Int
 
 data TicTacToe = TicTacToe Player Mask Mask -- Mask of spaces each player occupies
-  deriving Eq
+  deriving (Eq, Show)
 
 data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; should be a singleton
-  deriving Eq
+  deriving (Eq, Show)
 
 instance Move TicMove where
 
@@ -33,8 +33,6 @@ tic_moves (TicTacToe p xs os) = map (TicMove p) $ filter place_ok move_masks
 opponent :: Player -> Player
 opponent (Player 0) = Player 1
 opponent (Player 1) = Player 0
-
-
 
 -- TODO: The eternal dilemma: to check or to assume the validity of
 -- the move?  I suppose I will want the unchecked version...
@@ -80,7 +78,7 @@ instance Game TicTacToe TicMove where
 
 render_tic_tac_toe :: TicTacToe -> String
 render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..2] where
-    row i = map cell [i..2+i] ++ "\n"
+    row i = map cell [3*i..2+3*i] ++ "\n"
     cell i | testBit xs i = 'X'
            | testBit os i = 'O'
            | otherwise = '.'
