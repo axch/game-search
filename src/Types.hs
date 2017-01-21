@@ -7,7 +7,7 @@ import Data.Maybe (isJust)
 
 import Data.Random (RVar)
 
-newtype Player = Player Int
+newtype Player = Player Int deriving Eq
 
 class Move a where
 
