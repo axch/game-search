@@ -8,7 +8,6 @@ module TicTacToe where
 
 import Data.Bits
 
-import Control.Lens
 import Data.Random (RVar)
 
 import Types
@@ -78,3 +77,10 @@ instance Game TicTacToe TicMove where
                           Nothing
                  else Just 0
     current (TicTacToe p _ _) = p
+
+render_tic_tac_toe :: TicTacToe -> String
+render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..2] where
+    row i = map cell [i..2+i] ++ "\n"
+    cell i | testBit xs i = 'X'
+           | testBit os i = 'O'
+           | otherwise = '.'
