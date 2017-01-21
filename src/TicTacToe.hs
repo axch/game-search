@@ -84,3 +84,6 @@ render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..2] where
     cell i | testBit xs i = 'X'
            | testBit os i = 'O'
            | otherwise = '.'
+
+render :: TicTacToe -> IO ()
+render = putStrLn . render_tic_tac_toe

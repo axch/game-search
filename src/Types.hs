@@ -5,9 +5,9 @@ module Types where
 
 import Data.Maybe (isJust)
 
-import Data.Random (RVar)
+import Data.Random (RVar, sample)
 
-newtype Player = Player Int deriving Eq
+newtype Player = Player Int deriving (Eq, Show)
 
 class Move a where
 
@@ -23,3 +23,6 @@ class (Eq a, Move m) => Game a m | a -> m where
 -- Decision: A Move is meant to be applicable to many positions (such
 -- as placing a piece in Go), as this seems more common than moves
 -- being bound to the positions they come from.
+
+sampleIO :: RVar a -> IO a
+sampleIO = sample
