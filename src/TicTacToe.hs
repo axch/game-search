@@ -68,12 +68,11 @@ instance Game TicTacToe TicMove where
     move = tic_move
     start = TicTacToe (Player 0) zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
-    payoff p g = let win = winner g in
-                 if win == Right p then
-                     Just 1
-                 else if win == Left Nothing then
-                          Nothing
-                 else Just 0
+    payoff g = assess where
+        win = winner g
+        assess p | win == Right p = Just 1
+                 | win == Left Nothing = Nothing
+                 | otherwise = Just 0
     current (TicTacToe p _ _) = p
 
 render_tic_tac_toe :: TicTacToe -> String

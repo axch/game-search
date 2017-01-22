@@ -16,8 +16,8 @@ class (Eq a, Move m) => Game a m | a -> m where
     move  :: m -> a -> (RVar a) -- Random if it's Nature's move; TODO: make the distribution enumerable
     start :: a
     finished :: a -> Bool
-    finished a = isJust $ payoff (Player 0) a
-    payoff :: Player -> a -> Maybe Double -- Nothing if the game isn't over yet
+    finished a = isJust $ payoff a (Player 0)
+    payoff :: a -> Player -> Maybe Double -- Nothing if the game isn't over yet
     current :: a -> Player
 
 -- Decision: A Move is meant to be applicable to many positions (such
