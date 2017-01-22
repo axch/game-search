@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib, Types, MCTS, TicTacToe
+  exposed-modules:     Types, MCTS, TicTacToe
   build-depends:       base >= 4.7 && < 5
                      , lens
                      , random-fu
