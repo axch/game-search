@@ -18,7 +18,7 @@ data TicTacToe = TicTacToe Player Mask Mask -- Mask of spaces each player occupi
   deriving (Eq, Show)
 
 data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; should be a singleton
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 instance Move TicMove where
 
