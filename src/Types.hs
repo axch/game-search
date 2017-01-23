@@ -14,6 +14,7 @@ class Move a where
 class (Eq a, Move m) => Game a m | a -> m where
     moves :: a -> [m]
     move  :: m -> a -> (RVar a) -- Random if it's Nature's move; TODO: make the distribution enumerable
+    valid :: m -> a -> Bool
     start :: a
     finished :: a -> Bool
     finished a = isJust $ payoff a (Player 0)

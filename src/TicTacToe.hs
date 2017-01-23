@@ -25,10 +25,11 @@ instance Move TicMove where
 move_masks :: [Mask]
 move_masks = map bit [0..8]
 
+place_ok :: TicTacToe -> Mask -> Bool
+place_ok (TicTacToe _ xs os) mask = popCount (mask .&. (xs .|. os)) == 0
+
 tic_moves :: TicTacToe -> [TicMove]
-tic_moves (TicTacToe p xs os) = map (TicMove p) $ filter place_ok move_masks
-  where
-    place_ok mask = popCount (mask .&. (xs .|. os)) == 0
+tic_moves g@(TicTacToe p _ _) = map (TicMove p) $ filter (place_ok g) move_masks
 
 opponent :: Player -> Player
 opponent (Player 0) = Player 1
@@ -41,6 +42,9 @@ tic_move (TicMove (Player 0) m) (TicTacToe p' xs os) =
     return $ TicTacToe (opponent p') (xs .|. m) os
 tic_move (TicMove (Player 1) m) (TicTacToe p' xs os) =
     return $ TicTacToe (opponent p') xs (os .|. m)
+
+valid_tic_move :: TicMove -> TicTacToe -> Bool
+valid_tic_move (TicMove p m) g@(TicTacToe p' _ _) = p == p' && place_ok g m
 
 win_masks :: [Mask]
 win_masks = [ 0b000000111
@@ -66,6 +70,7 @@ winner (TicTacToe _ xs os)
 instance Game TicTacToe TicMove where
     moves = tic_moves
     move = tic_move
+    valid = valid_tic_move
     start = TicTacToe (Player 0) zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
     payoff g = assess where
