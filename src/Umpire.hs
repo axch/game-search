@@ -14,6 +14,12 @@ render_one_move strat g = do
   g' <- sampleIO $ move m g
   render g'
 
+render_evaluation :: (Renderable a, Show m) => (a -> RVar m) -> a -> IO ()
+render_evaluation eval g = do
+  render g
+  res <- sampleIO $ eval g
+  putStrLn $ show res
+
 game :: (Game a m) => (a -> RVar m) -> a -> RVar a -- Where the returned state is terminal
 game strat = go where
   go g | finished g = return g
