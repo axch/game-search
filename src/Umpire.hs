@@ -1,5 +1,6 @@
 module Umpire where
 
+import Control.Monad
 import GHC.Base (assert)
 
 import Data.Random (RVar)
@@ -12,3 +13,7 @@ play_out strat = go where
        | otherwise = do m <- strat g
                         g' <- assert (valid m g) $ move m g
                         go g'
+
+match :: (Monoid res, Game a m) => Int -> (a -> RVar m) -> (a -> res) -> a -> RVar res
+match n strat eval start =
+    liftM mconcat $ liftM (map eval) $ replicateM n (play_out strat start)

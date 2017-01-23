@@ -1,6 +1,5 @@
 module Main where
 
-import Control.Monad
 import Data.Monoid
 
 import Data.Random (RVar)
@@ -8,7 +7,7 @@ import Data.Random (RVar)
 import MCTS (uniform_choose)
 import TicTacToe
 import Types
-import Umpire (play_out)
+import Umpire (match)
 
 payoffs :: TicTacToe -> (Sum Double, Sum Double)
 payoffs g = (Sum p1, Sum p2) where
@@ -17,11 +16,8 @@ payoffs g = (Sum p1, Sum p2) where
     (Just p2) = win $ Player 1
 
 
-accumulate :: (Monoid m) => Int -> (TicTacToe -> m) -> TicTacToe -> RVar m
-accumulate n f s = liftM mconcat $ liftM (map f) $ replicateM n (play_out uniform_choose s)
-
 win_probs :: Int -> TicTacToe -> IO ()
-win_probs n g = render g >> sampleIO (accumulate n payoffs g) >>= (putStrLn . show)
+win_probs n g = render g >> sampleIO (match n uniform_choose payoffs g) >>= (putStrLn . show)
 
 doit :: (TicTacToe -> RVar TicMove) -> TicTacToe -> IO ()
 doit strat g = do
