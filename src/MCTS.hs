@@ -8,7 +8,7 @@ import GHC.Base (assert)
 
 import Data.Random (RVar)
 import Data.Random.Distribution (rvar)
-import qualified Data.Random.Distribution.Categorical as Cat
+import qualified Data.Random.Distribution.Uniform as Uni
 
 import Types
 
@@ -16,7 +16,12 @@ ones :: [Double]
 ones = 1:ones
 
 uniform_choose :: (Game a m) => a -> RVar m
-uniform_choose g = rvar $ Cat.normalizeCategoricalPs $ Cat.fromList $ zip ones $ moves g
+uniform_choose g = do
+  index <- Uni.uniform 0 (n-1)
+  return $ ms!!index
+    where
+      ms = moves g
+      n = length ms
 
 play_out :: (Game a m) => (a -> RVar m) -> a -> RVar a -- Where the returned state is terminal
 play_out strat = go where
