@@ -2,12 +2,10 @@ module Main where
 
 import Data.Monoid
 
-import Data.Random (RVar)
-
 import MCTS (uniform_choose, ucb1_choose)
 import TicTacToe
 import Types
-import Umpire (match, render_evaluation)
+import Umpire (match, versus, render_evaluation)
 
 results :: TicTacToe -> (Sum Int, Sum Int, Sum Int)
 results g =
@@ -19,10 +17,6 @@ results g =
 
 win_probs :: Int -> TicTacToe -> IO ()
 win_probs n g = render_evaluation (match n (versus [ucb1_choose 100, ucb1_choose 1000]) results) g
-
-versus :: (Game a m) => [(a -> RVar m)] -> a -> RVar m
-versus strats g = (strats!!i) g where
-    (Player i) = current g
 
 main :: IO ()
 main = undefined

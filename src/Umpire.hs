@@ -20,6 +20,10 @@ render_evaluation eval g = do
   res <- sampleIO $ eval g
   putStrLn $ show res
 
+versus :: (Game a m) => [(a -> RVar m)] -> a -> RVar m
+versus strats g = (strats!!i) g where
+    (Player i) = current g
+
 game :: (Game a m) => (a -> RVar m) -> a -> RVar a -- Where the returned state is terminal
 game strat = go where
   go g | finished g = return g
