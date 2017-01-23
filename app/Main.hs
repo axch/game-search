@@ -5,9 +5,10 @@ import Data.Monoid
 
 import Data.Random (RVar)
 
-import MCTS (play_out, uniform_choose)
+import MCTS (uniform_choose)
 import TicTacToe
 import Types
+import Umpire (play_out)
 
 payoffs :: TicTacToe -> (Sum Double, Sum Double)
 payoffs g = (Sum p1, Sum p2) where
