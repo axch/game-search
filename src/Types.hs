@@ -17,6 +17,7 @@ class (Eq a, Move m) => Game a m | a -> m where
     start :: a
     finished :: a -> Bool
     finished a = isJust $ payoff a (Player 0)
+    -- All the proofs I have found expect rewards to be in [0,1]
     payoff :: a -> Player -> Maybe Double -- Nothing if the game isn't over yet
     current :: a -> Player
 
