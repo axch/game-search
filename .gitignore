@@ -1,1 +1,5 @@
 .stack-work
+*.hp
+*.prof
+*.ps
+*.pdf
