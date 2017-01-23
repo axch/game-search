@@ -13,15 +13,13 @@ import Types
 ones :: [Double]
 ones = 1:ones
 
-uniform_step :: (Game a m) => a -> RVar a
-uniform_step g = do
-  m <- rvar $ Cat.normalizeCategoricalPs $ Cat.fromList $ zip ones $ moves g
-  g' <- move m g
-  return g'
+uniform_choose :: (Game a m) => a -> RVar m
+uniform_choose g = rvar $ Cat.normalizeCategoricalPs $ Cat.fromList $ zip ones $ moves g
 
 play_out :: (Game a m) => a -> RVar a -- Where the returned state is terminal
 play_out g | finished g = return g
-           | otherwise = do g' <- uniform_step g
+           | otherwise = do m <- uniform_choose g
+                            g' <- move m g
                             play_out g'
 
 -- Map each move to the total payoff obtained by going there, together
