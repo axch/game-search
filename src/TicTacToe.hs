@@ -72,6 +72,7 @@ instance Game TicTacToe TicMove where
         win = winner g
         assess p | win == Right p = Just 1
                  | win == Left Nothing = Nothing
+                 | win == Left (Just ()) = Just 0.5
                  | otherwise = Just 0
     current (TicTacToe p _ _) = p
 
