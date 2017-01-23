@@ -14,6 +14,12 @@ render_one_move strat g = do
   g' <- sampleIO $ move m g
   render g'
 
+render_one_game :: (Renderable a) => (a -> RVar a) -> a -> IO ()
+render_one_game strat g = do
+  render g
+  g' <- sampleIO $ strat g
+  render g'
+
 render_evaluation :: (Renderable a, Show m) => (a -> RVar m) -> a -> IO ()
 render_evaluation eval g = do
   render g

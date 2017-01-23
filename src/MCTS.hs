@@ -4,6 +4,7 @@ import Data.Function (on)
 import Data.List (maximumBy)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
+import GHC.Base (assert)
 
 import Data.Random (RVar)
 import Data.Random.Distribution (rvar)
@@ -79,7 +80,7 @@ ucb1_choose tries g = go tries $ empty_level $ moves g where
 data UCTree m = UCTree Int (M.Map m (Maybe (UCTree m, Double, Int)))
 
 empty_subtree :: (Ord m) => [m] -> UCTree m
-empty_subtree ms = UCTree 0 $ M.fromList $ zip ms $ repeat Nothing
+empty_subtree ms = assert (length ms > 0) $ UCTree 0 $ M.fromList $ zip ms $ repeat Nothing
 
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
