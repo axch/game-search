@@ -88,5 +88,5 @@ render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..2] where
            | testBit os i = 'O'
            | otherwise = '.'
 
-render :: TicTacToe -> IO ()
-render = putStrLn . render_tic_tac_toe
+instance Renderable TicTacToe where
+    render = putStrLn . render_tic_tac_toe

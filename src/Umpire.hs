@@ -7,6 +7,13 @@ import Data.Random (RVar)
 
 import Types
 
+render_one_move :: (Game a m) => (a -> RVar m) -> a -> IO ()
+render_one_move strat g = do
+  render g
+  m <- sampleIO $ strat g
+  g' <- sampleIO $ move m g
+  render g'
+
 game :: (Game a m) => (a -> RVar m) -> a -> RVar a -- Where the returned state is terminal
 game strat = go where
   go g | finished g = return g

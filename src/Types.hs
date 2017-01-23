@@ -11,7 +11,10 @@ newtype Player = Player Int deriving (Eq, Ord, Show)
 
 class Move a where
 
-class (Eq a, Move m) => Game a m | a -> m where
+class Renderable a where
+    render :: a -> IO ()
+
+class (Eq a, Renderable a, Move m) => Game a m | a -> m where
     moves :: a -> [m]
     move  :: m -> a -> (RVar a) -- Random if it's Nature's move; TODO: make the distribution enumerable
     valid :: m -> a -> Bool

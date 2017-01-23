@@ -20,13 +20,6 @@ results g =
 win_probs :: Int -> TicTacToe -> IO ()
 win_probs n g = render g >> sampleIO (match n (versus [ucb1_choose 100, ucb1_choose 1000]) results g) >>= (putStrLn . show)
 
-doit :: (TicTacToe -> RVar TicMove) -> TicTacToe -> IO ()
-doit strat g = do
-  render g
-  m <- sampleIO $ strat g
-  g' <- sampleIO $ move m g
-  render g'
-
 versus :: (Game a m) => [(a -> RVar m)] -> a -> RVar m
 versus strats g = (strats!!i) g where
     (Player i) = current g
