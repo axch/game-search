@@ -76,21 +76,21 @@ ucb1_choose tries g = go tries $ empty_level $ moves g where
 -- The standard UCT tree policy makes an interesting choice, namely to
 -- grow the tree by one node for each play-out.
 
-data UCTree m = UCTree Int (M.Map m (UCTree m, Double, Int))
+data UCTree m = UCTree Int (M.Map m (Maybe (UCTree m, Double, Int)))
 
-empty_subtree :: UCTree m
-empty_subtree = UCTree 0 M.empty
+empty_subtree :: (Ord m) => [m] -> UCTree m
+empty_subtree ms = UCTree 0 $ M.fromList $ zip ms $ repeat Nothing
 
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
 -- taking the lexicographically earliest move.
 select_move' :: UCTree m -> RVar m
 select_move' (UCTree tot state) = return m where
-    value (_, (_, _, 0)) = 1/0
-    value (_, (_, score, tries)) =
+    value (_, Nothing) = 1/0
+    value (_, Just (_, score, tries)) =
         score / fromIntegral tries
         + exploration_parameter * sqrt (log (fromIntegral tot) / fromIntegral tries)
-    (m, (_, _, _)) = maximumBy (compare `on` value) $ M.toList state
+    (m, _) = maximumBy (compare `on` value) $ M.toList state
 
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
@@ -102,14 +102,14 @@ at_selected_state :: (Game a m, Ord m) => (a -> RVar (Player -> Double)) -> a ->
 at_selected_state eval g t@(UCTree tot state) = do
   m <- select_move' t
   g' <- move m g
-  case M.lookup m state of
+  case fromJust $ M.lookup m state of
     Just (subtree, reward, tries) ->
         do (subtree', win) <- at_selected_state eval g' subtree
-           let state' = M.insert m (subtree', reward + win (current g), tries + 1) state
+           let state' = M.insert m (Just (subtree', reward + win (current g), tries + 1)) state
            return (UCTree (tot+1) state', win)
     Nothing ->
         do win <- eval g'
-           let state' = M.insert m (empty_subtree, win (current g), 1) state
+           let state' = M.insert m (Just (empty_subtree (moves g'), win (current g), 1)) state
            return (UCTree (tot+1) state', win)
 
 one_play_out :: (Game a m) => a -> RVar (Player -> Double)
@@ -121,11 +121,12 @@ one_play_out g = do
 -- this case
 select_final_move' :: UCTree m -> RVar m
 select_final_move' (UCTree _ state) = return m where
-    value (_, (_, _, tries)) = tries
-    (m, (_, _, _)) = maximumBy (compare `on` value) $ M.toList state
+    value (_, Nothing) = 0
+    value (_, (Just (_, _, tries))) = tries
+    (m, _) = maximumBy (compare `on` value) $ M.toList state
 
 uct_choose :: (Game a m, Ord m) => Int -> a -> RVar m
-uct_choose tries g = go tries $ empty_subtree where
+uct_choose tries g = go tries $ empty_subtree $ moves g where
     go tries tree | tries == 0 = select_final_move' tree
                   | otherwise = do
       (tree', _) <- at_selected_state one_play_out g tree
