@@ -16,11 +16,12 @@ ones = 1:ones
 uniform_choose :: (Game a m) => a -> RVar m
 uniform_choose g = rvar $ Cat.normalizeCategoricalPs $ Cat.fromList $ zip ones $ moves g
 
-play_out :: (Game a m) => a -> RVar a -- Where the returned state is terminal
-play_out g | finished g = return g
-           | otherwise = do m <- uniform_choose g
-                            g' <- move m g
-                            play_out g'
+play_out :: (Game a m) => (a -> RVar m) -> a -> RVar a -- Where the returned state is terminal
+play_out strat = go where
+  go g | finished g = return g
+       | otherwise = do m <- strat g
+                        g' <- move m g
+                        go g'
 
 -- Map each move to the total payoff obtained by going there, together
 -- with the number of times we've gone there
@@ -32,7 +33,7 @@ empty_level ms = OneLevel 0 $ M.fromList $ zip ms $ repeat (0, 0)
 update_once :: (Ord m, Game a m) => a -> m -> OneLevel m -> RVar (OneLevel m)
 update_once g m (OneLevel tot state) = do
   g' <- move m g
-  g'' <- play_out g'
+  g'' <- play_out uniform_choose g'
   let (Just p) = payoff g'' (current g)
   return $ OneLevel (tot+1) $ M.adjust (\(old_p, n) -> (old_p + p, n + 1)) m state
 

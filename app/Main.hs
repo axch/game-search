@@ -5,7 +5,7 @@ import Data.Monoid
 
 import Data.Random (RVar)
 
-import MCTS (play_out)
+import MCTS (play_out, uniform_choose)
 import TicTacToe
 import Types
 
@@ -17,7 +17,7 @@ payoffs g = (Sum p1, Sum p2) where
 
 
 accumulate :: (Monoid m) => Int -> (TicTacToe -> m) -> TicTacToe -> RVar m
-accumulate n f s = liftM mconcat $ liftM (map f) $ replicateM n (play_out s)
+accumulate n f s = liftM mconcat $ liftM (map f) $ replicateM n (play_out uniform_choose s)
 
 win_probs :: Int -> TicTacToe -> IO ()
 win_probs n g = render g >> sampleIO (accumulate n payoffs g) >>= (putStrLn . show)
