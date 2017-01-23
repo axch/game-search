@@ -110,7 +110,8 @@ at_selected_state eval g t@(UCTree tot state) = do
            return (UCTree (tot+1) state', win)
     Nothing ->
         do win <- eval g'
-           let state' = M.insert m (Just (empty_subtree (moves g'), win (current g), 1)) state
+           let state' = if finished g' then state
+                        else M.insert m (Just (empty_subtree (moves g'), win (current g), 1)) state
            return (UCTree (tot+1) state', win)
 
 one_play_out :: (Game a m) => a -> RVar (Player -> Double)
