@@ -77,18 +77,25 @@ ucb1_choose tries g = go tries $ empty_level $ moves g where
 -- The standard UCT tree policy makes an interesting choice, namely to
 -- grow the tree by one node for each play-out.
 
-data UCTree m = UCTree Int (M.Map m (Maybe (UCTree m, Double, Int)))
+-- Invariants:
+-- - The first int is the number of play-outs performed from this node
+-- - The map is always complete, i.e. all the moves from the state
+--   this node is for are present
+-- - The subtree at a key is Nothing if that node has not been expanded
+-- - The latter can happen with a non-zero trial count if that game
+--   is finished.
+data UCTree m = UCTree Int (M.Map m (Maybe (UCTree m), Double, Int))
 
 empty_subtree :: (Ord m) => [m] -> UCTree m
-empty_subtree ms = assert (length ms > 0) $ UCTree 0 $ M.fromList $ zip ms $ repeat Nothing
+empty_subtree ms = assert (length ms > 0) $ UCTree 0 $ M.fromList $ zip ms $ repeat (Nothing, 0, 0)
 
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
 -- taking the lexicographically earliest move.
 select_move' :: UCTree m -> RVar m
 select_move' (UCTree tot state) = return m where
-    value (_, Nothing) = 1/0
-    value (_, Just (_, score, tries)) =
+    value (_, (_, _, 0)) = 1/0
+    value (_, (_, score, tries)) =
         score / fromIntegral tries
         + exploration_parameter * sqrt (log (fromIntegral tot) / fromIntegral tries)
     (m, _) = maximumBy (compare `on` value) $ M.toList state
@@ -104,14 +111,15 @@ at_selected_state eval g t@(UCTree tot state) = do
   m <- select_move' t
   g' <- move m g
   case fromJust $ M.lookup m state of
-    Just (subtree, reward, tries) ->
+    (Just subtree, reward, tries) ->
         do (subtree', win) <- at_selected_state eval g' subtree
-           let state' = M.insert m (Just (subtree', reward + win (current g), tries + 1)) state
+           let state' = M.insert m (Just subtree', reward + win (current g), tries + 1) state
            return (UCTree (tot+1) state', win)
-    Nothing ->
+    (Nothing, reward, tries) ->
         do win <- eval g'
-           let state' = if finished g' then state
-                        else M.insert m (Just (empty_subtree (moves g'), win (current g), 1)) state
+           let subtree' = if finished g' then Nothing
+                          else Just $ empty_subtree (moves g')
+               state' = M.insert m (subtree', reward + win (current g), tries + 1) state
            return (UCTree (tot+1) state', win)
 
 one_play_out :: (Game a m) => a -> RVar (Player -> Double)
@@ -123,8 +131,7 @@ one_play_out g = do
 -- this case
 select_final_move' :: UCTree m -> RVar m
 select_final_move' (UCTree _ state) = return m where
-    value (_, Nothing) = 0
-    value (_, (Just (_, _, tries))) = tries
+    value (_, (_, _, tries)) = tries
     (m, _) = maximumBy (compare `on` value) $ M.toList state
 
 uct_choose :: (Game a m, Ord m) => Int -> a -> RVar m
