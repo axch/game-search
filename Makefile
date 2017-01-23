@@ -3,3 +3,6 @@ mcts-exe.pdf:
 
 mcts-exe.prof:
 	stack build --profile && time stack exec -- mcts-exe 100 200 +RTS -p
+
+time:
+	stack build && time stack exec mcts-exe 100 200
