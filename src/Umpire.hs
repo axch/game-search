@@ -29,6 +29,7 @@ render_evaluation eval g = do
 versus :: (Game a m) => [(a -> b)] -> a -> b
 versus strats g = (strats!!i) g where
     (Player i) = current g
+{-# INLINE versus #-}
 
 game :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 game strat = go where
@@ -36,7 +37,9 @@ game strat = go where
        | otherwise = do m <- strat g
                         g' <- assert (valid m g) $ move m g
                         go g'
+{-# SPECIALIZE game :: (Game a m) => (a -> IO m) -> a -> IO a #-}
 
 match :: (Monoid res, Game a m, MonadRandom r) => Int -> (a -> r m) -> (a -> res) -> a -> r res
 match n strat eval start =
     liftM mconcat $ liftM (map eval) $ replicateM n (game strat start)
+{-# SPECIALIZE match :: (Monoid res, Game a m) => Int -> (a -> IO m) -> (a -> res) -> a -> IO res #-}

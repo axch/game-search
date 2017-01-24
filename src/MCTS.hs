@@ -14,13 +14,14 @@ import Types
 ones :: [Double]
 ones = 1:ones
 
-uniform_choose :: (MonadRandom r) => (Game a m) => a -> r m
+uniform_choose :: (MonadRandom r, Game a m) => a -> r m
 uniform_choose g = do
   index <- sample $ Uni.uniform 0 (n-1)
   return $ ms!!index
     where
       ms = moves g
       n = length ms
+{-# SPECIALIZE uniform_choose :: (Game a m) => a -> IO m #-}
 
 play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 play_out strat = go where
@@ -28,6 +29,7 @@ play_out strat = go where
        | otherwise = do m <- strat g
                         g' <- move m g
                         go g'
+{-# SPECIALIZE play_out :: (Game a m) => (a -> IO m) -> a -> IO a #-}
 
 ----------------------------------------------------------------------
 -- UCB 1
@@ -103,6 +105,7 @@ select_move' (UCTree tot state) = return m where
         score / fromIntegral tries
         + exploration_parameter * sqrt (log (fromIntegral tot) / fromIntegral tries)
     m = fst $ maximumBy (compare `on` value) $ M.toList state
+{-# SPECIALIZE select_move' :: UCTree m -> IO m #-}
 
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
@@ -125,11 +128,14 @@ at_selected_state eval g t@(UCTree tot state) = do
                           else Just $ empty_subtree (moves g')
                state' = M.insert m (subtree', reward + win (current g), tries + 1) state
            return (UCTree (tot+1) state', win)
+{-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player -> Double)) -> a -> UCTree m
+  -> IO ((UCTree m), (Player -> Double)) #-}
 
 one_play_out :: (Game a m, MonadRandom r) => a -> r (Player -> Double)
 one_play_out g = do
   end <- play_out uniform_choose g
   return $ fromJust . payoff end
+{-# SPECIALIZE one_play_out :: (Game a m) => a -> IO (Player -> Double) #-}
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
@@ -137,6 +143,7 @@ select_final_move' :: (MonadRandom r) => UCTree m -> r m
 select_final_move' (UCTree _ state) = return m where
     value (_, (_, _, tries)) = tries
     (m, _) = maximumBy (compare `on` value) $ M.toList state
+{-# SPECIALIZE select_final_move' :: UCTree m -> IO m #-}
 
 uct_choose :: (Game a m, Ord m, MonadRandom r) => Int -> a -> r m
 uct_choose tries g = go tries $ empty_subtree $ moves g where
@@ -144,3 +151,4 @@ uct_choose tries g = go tries $ empty_subtree $ moves g where
                   | otherwise = do
       (tree', _) <- at_selected_state one_play_out g tree
       go (tries-1) tree'
+{-# SPECIALIZE uct_choose :: (Game a m, Ord m) => Int -> a -> IO m #-}
