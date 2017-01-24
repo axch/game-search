@@ -103,7 +103,7 @@ select_move' (UCTree tot state) = return m where
     value (_, (_, score, tries)) =
         score / fromIntegral tries
         + exploration_parameter * sqrt (log (fromIntegral tot) / fromIntegral tries)
-    (m, _) = maximumBy (compare `on` value) $ M.toList state
+    m = fst $ maximumBy (compare `on` value) $ M.toList state
 
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
