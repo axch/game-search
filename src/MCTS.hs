@@ -6,8 +6,6 @@ import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import GHC.Base (assert)
 
-import Data.Random (RVar)
-import Data.Random.Distribution (rvar)
 import qualified Data.Random.Distribution.Uniform as Uni
 
 import Types
@@ -15,7 +13,7 @@ import Types
 ones :: [Double]
 ones = 1:ones
 
-uniform_choose :: (Game a m) => a -> RVar m
+uniform_choose :: (Game a m) => a -> Ran m
 uniform_choose g = do
   index <- Uni.uniform 0 (n-1)
   return $ ms!!index
@@ -23,7 +21,7 @@ uniform_choose g = do
       ms = moves g
       n = length ms
 
-play_out :: (Game a m) => (a -> RVar m) -> a -> RVar a -- Where the returned state is terminal
+play_out :: (Game a m) => (a -> Ran m) -> a -> Ran a -- Where the returned state is terminal
 play_out strat = go where
   go g | finished g = return g
        | otherwise = do m <- strat g
@@ -40,7 +38,7 @@ data OneLevel m = OneLevel Int (M.Map m (Double, Int))
 empty_level :: (Ord m) => [m] -> OneLevel m
 empty_level ms = OneLevel 0 $ M.fromList $ zip ms $ repeat (0, 0)
 
-update_once :: (Ord m, Game a m) => a -> m -> OneLevel m -> RVar (OneLevel m)
+update_once :: (Ord m, Game a m) => a -> m -> OneLevel m -> Ran (OneLevel m)
 update_once g m (OneLevel tot state) = do
   g' <- move m g
   g'' <- play_out uniform_choose g'
@@ -53,7 +51,7 @@ exploration_parameter = sqrt 2
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
 -- taking the lexicographically earliest move.
-select_move :: OneLevel m -> RVar m
+select_move :: OneLevel m -> Ran m
 select_move (OneLevel tot state) = return m where
     value (_, (_, 0)) = 1/0
     value (_, (score, tries)) =
@@ -63,12 +61,12 @@ select_move (OneLevel tot state) = return m where
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
-select_final_move :: OneLevel m -> RVar m
+select_final_move :: OneLevel m -> Ran m
 select_final_move (OneLevel _ state) = return m where
     value (_, (_, tries)) = tries
     (m, (_, _)) = maximumBy (compare `on` value) $ M.toList state
 
-ucb1_choose :: (Ord m, Game a m) => Int -> a -> RVar m
+ucb1_choose :: (Ord m, Game a m) => Int -> a -> Ran m
 ucb1_choose tries g = go tries $ empty_level $ moves g where
     go tries level | tries == 0 = select_final_move level
                    | otherwise = do
@@ -97,7 +95,7 @@ empty_subtree ms = assert (length ms > 0) $ UCTree 0 $ M.fromList $ zip ms $ rep
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
 -- taking the lexicographically earliest move.
-select_move' :: UCTree m -> RVar m
+select_move' :: UCTree m -> Ran m
 select_move' (UCTree tot state) = return m where
     value (_, (_, _, 0)) = 1/0
     value (_, (_, score, tries)) =
@@ -110,8 +108,8 @@ select_move' (UCTree tot state) = return m where
 -- function for the caller's benefit.
 -- TODO: Since the move's result may be stochastic, I have to know what
 -- Nature chose in order to select the proper sub-tree.
-at_selected_state :: (Game a m, Ord m) => (a -> RVar (Player -> Double)) -> a -> UCTree m
-                     -> RVar ((UCTree m), (Player -> Double))
+at_selected_state :: (Game a m, Ord m) => (a -> Ran (Player -> Double)) -> a -> UCTree m
+                     -> Ran ((UCTree m), (Player -> Double))
 at_selected_state eval g t@(UCTree tot state) = do
   m <- select_move' t
   g' <- move m g
@@ -127,19 +125,19 @@ at_selected_state eval g t@(UCTree tot state) = do
                state' = M.insert m (subtree', reward + win (current g), tries + 1) state
            return (UCTree (tot+1) state', win)
 
-one_play_out :: (Game a m) => a -> RVar (Player -> Double)
+one_play_out :: (Game a m) => a -> Ran (Player -> Double)
 one_play_out g = do
   end <- play_out uniform_choose g
   return $ fromJust . payoff end
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
-select_final_move' :: UCTree m -> RVar m
+select_final_move' :: UCTree m -> Ran m
 select_final_move' (UCTree _ state) = return m where
     value (_, (_, _, tries)) = tries
     (m, _) = maximumBy (compare `on` value) $ M.toList state
 
-uct_choose :: (Game a m, Ord m) => Int -> a -> RVar m
+uct_choose :: (Game a m, Ord m) => Int -> a -> Ran m
 uct_choose tries g = go tries $ empty_subtree $ moves g where
     go tries tree | tries == 0 = select_final_move' tree
                   | otherwise = do

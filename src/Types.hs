@@ -7,6 +7,8 @@ import Data.Maybe (isJust)
 
 import Data.Random (RVar, sample)
 
+type Ran = RVar
+
 newtype Player = Player Int deriving (Eq, Ord, Show)
 
 class Move a where
@@ -16,7 +18,7 @@ class Renderable a where
 
 class (Eq a, Renderable a, Move m) => Game a m | a -> m where
     moves :: a -> [m]
-    move  :: m -> a -> (RVar a) -- Random if it's Nature's move; TODO: make the distribution enumerable
+    move  :: m -> a -> (Ran a) -- Random if it's Nature's move; TODO: make the distribution enumerable
     valid :: m -> a -> Bool
     start :: a
     finished :: a -> Bool
@@ -29,5 +31,5 @@ class (Eq a, Renderable a, Move m) => Game a m | a -> m where
 -- as placing a piece in Go), as this seems more common than moves
 -- being bound to the positions they come from.
 
-sampleIO :: RVar a -> IO a
+sampleIO :: Ran a -> IO a
 sampleIO = sample

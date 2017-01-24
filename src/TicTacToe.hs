@@ -8,8 +8,6 @@ module TicTacToe where
 
 import Data.Bits
 
-import Data.Random (RVar)
-
 import Types
 
 type Mask = Int
@@ -37,7 +35,7 @@ opponent (Player 1) = Player 0
 
 -- TODO: The eternal dilemma: to check or to assume the validity of
 -- the move?  I suppose I will want the unchecked version...
-tic_move :: TicMove -> TicTacToe -> RVar TicTacToe
+tic_move :: TicMove -> TicTacToe -> Ran TicTacToe
 tic_move (TicMove (Player 0) m) (TicTacToe p' xs os) =
     return $ TicTacToe (opponent p') (xs .|. m) os
 tic_move (TicMove (Player 1) m) (TicTacToe p' xs os) =
