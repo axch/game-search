@@ -75,7 +75,7 @@ data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; sho
 instance Move TicMove where
 
 place_ok :: TicTacToe -> Mask -> Bool
-place_ok (TicTacToe _ xs os) mask = popCount (mask .&. (xs .|. os)) == 0
+place_ok (TicTacToe _ xs os) mask = (mask .&. (xs .|. os)) == zeroBits
 
 tic_moves :: TicTacToe -> [TicMove]
 tic_moves g@(TicTacToe p _ _) = map (TicMove p) $ filter (place_ok g) move_masks
