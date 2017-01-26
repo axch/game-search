@@ -116,6 +116,8 @@ instance Game TicTacToe TicMove where
                  | win == Left (Just ()) = Just 0.5
                  | otherwise = Just 0
     current (TicTacToe p _ _) = p
+    known_one_move_wins = one_move_wins
+    known_one_move_blocks = one_move_win_blocks
 
 -- Optimizations
 
