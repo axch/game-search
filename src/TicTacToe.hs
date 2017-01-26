@@ -129,11 +129,18 @@ one_off :: Mask -> Mask -> Maybe Mask
 one_off present needed = if popCount candidate == 1 then Just candidate else Nothing
     where candidate = needed .&. (complement present)
 
+one_move_win_masks :: TicTacToe -> [Mask]
+one_move_win_masks (TicTacToe (Player 0) xs os) =
+    catMaybes $ map (one_off xs) $ available_masks os
+one_move_win_masks (TicTacToe (Player 1) xs os) =
+    catMaybes $ map (one_off os) $ available_masks xs
+
 one_move_wins :: TicTacToe -> [TicMove]
-one_move_wins (TicTacToe (Player 0) xs os) =
-    map (TicMove (Player 0)) $ catMaybes $ map (one_off xs) $ available_masks os
-one_move_wins (TicTacToe (Player 1) xs os) =
-    map (TicMove (Player 1)) $ catMaybes $ map (one_off os) $ available_masks xs
+one_move_wins g@(TicTacToe p _ _) = map (TicMove p) $ one_move_win_masks g
+
+one_move_win_blocks :: TicTacToe -> [TicMove]
+one_move_win_blocks (TicTacToe p xs os) =
+    map (TicMove p) $ one_move_win_masks $ TicTacToe (opponent p) xs os
 
 -- Debugging
 
