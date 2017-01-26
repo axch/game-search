@@ -138,3 +138,6 @@ move_at loc g = tic_move m g where
 
 moves_at :: [(Int, Int)] -> TicTacToe -> TicTacToe
 moves_at locs g = foldl (flip move_at) g locs
+
+instance Renderable TicMove where
+    render m = render (tic_move m start)
