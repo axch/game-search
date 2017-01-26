@@ -131,3 +131,10 @@ instance Renderable TicTacToe where
 
 winning_boards :: [TicTacToe]
 winning_boards = map (TicTacToe undefined zeroBits) win_masks
+
+move_at :: (Int, Int) -> TicTacToe -> TicTacToe
+move_at loc g = tic_move m g where
+    m = TicMove (current g) $ bit $ coords_to_bit_loc loc
+
+moves_at :: [(Int, Int)] -> TicTacToe -> TicTacToe
+moves_at locs g = foldl (flip move_at) g locs
