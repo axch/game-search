@@ -22,8 +22,17 @@ data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; sho
 
 instance Move TicMove where
 
+board_width :: Int
+board_width = 3
+
+board_height :: Int
+board_height = 3
+
+board_size :: Int
+board_size = board_width * board_height
+
 move_masks :: [Mask]
-move_masks = map bit [0..8]
+move_masks = map bit [0..(board_size - 1)]
 
 place_ok :: TicTacToe -> Mask -> Bool
 place_ok (TicTacToe _ xs os) mask = popCount (mask .&. (xs .|. os)) == 0
@@ -64,7 +73,7 @@ winner :: TicTacToe -> Either (Maybe ()) Player -- Left $ Just () means 'draw'
 winner (TicTacToe _ xs os)
     | any (flip mask_contains xs) win_masks = Right $ Player 0
     | any (flip mask_contains os) win_masks = Right $ Player 1
-    | popCount (xs .|. os) == 9 = Left $ Just () -- Draw
+    | popCount (xs .|. os) == board_size = Left $ Just () -- Draw
     | otherwise = Left Nothing
 
 instance Game TicTacToe TicMove where
@@ -82,8 +91,8 @@ instance Game TicTacToe TicMove where
     current (TicTacToe p _ _) = p
 
 render_tic_tac_toe :: TicTacToe -> String
-render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..2] where
-    row i = map cell [3*i..2+3*i] ++ "\n"
+render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..(board_height - 1)] where
+    row i = map cell [board_width*i..(board_width*(i+1) - 1)] ++ "\n"
     cell i | testBit xs i = 'X'
            | testBit os i = 'O'
            | otherwise = '.'
