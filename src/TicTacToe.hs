@@ -10,8 +10,6 @@ module TicTacToe where
 import Data.Bits
 import Data.Maybe
 
-import Data.Random (MonadRandom)
-
 import Types
 
 -- Configuration
@@ -86,11 +84,11 @@ opponent (Player 1) = Player 0
 
 -- TODO: The eternal dilemma: to check or to assume the validity of
 -- the move?  I suppose I will want the unchecked version...
-tic_move :: (MonadRandom r) => TicMove -> TicTacToe -> r TicTacToe
+tic_move :: TicMove -> TicTacToe -> TicTacToe
 tic_move (TicMove (Player 0) m) (TicTacToe p' xs os) =
-    return $ TicTacToe (opponent p') (xs .|. m) os
+    TicTacToe (opponent p') (xs .|. m) os
 tic_move (TicMove (Player 1) m) (TicTacToe p' xs os) =
-    return $ TicTacToe (opponent p') xs (os .|. m)
+    TicTacToe (opponent p') xs (os .|. m)
 
 valid_tic_move :: TicMove -> TicTacToe -> Bool
 valid_tic_move (TicMove p m) g@(TicTacToe p' _ _) = p == p' && place_ok g m
@@ -107,7 +105,7 @@ winner (TicTacToe _ xs os)
 
 instance Game TicTacToe TicMove where
     moves = tic_moves
-    move = tic_move
+    move m = return . tic_move m
     valid = valid_tic_move
     start = TicTacToe (Player 0) zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
