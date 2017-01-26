@@ -17,11 +17,11 @@ results g =
       Left Nothing -> (Sum 0, Sum 0, Sum 0)
 
 win_probs :: Int -> TicTacToe -> IO ()
-win_probs n g = render_evaluation (match n (versus [uct_choose 100, ucb1_choose 100]) results) g
+win_probs n g = render_evaluation (match n (versus [uct_choose 100 uniform_choose, ucb1_choose 100]) results) g
 
 benchmark :: Int -> Int -> IO ()
 benchmark games budget = render_evaluation (match games strat results) (start :: TicTacToe) where
-    strat = versus [(uct_choose budget), (uct_choose budget)]
+    strat = versus [(uct_choose budget uniform_choose), (uct_choose budget uniform_choose)]
 
 main :: IO ()
 main = do

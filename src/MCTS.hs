@@ -139,11 +139,11 @@ at_selected_state eval g t@(UCTree tot state) = do
 {-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player -> Double)) -> a -> UCTree m
   -> IO ((UCTree m), (Player -> Double)) #-}
 
-one_play_out :: (Game a m, MonadRandom r) => a -> r (Player -> Double)
-one_play_out g = do
-  end <- play_out uniform_choose g
+one_play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r (Player -> Double)
+one_play_out strat g = do
+  end <- play_out strat g
   return $ fromJust . payoff end
-{-# SPECIALIZE one_play_out :: (Game a m) => a -> IO (Player -> Double) #-}
+{-# SPECIALIZE one_play_out :: (Game a m) => (a -> IO m) -> a -> IO (Player -> Double) #-}
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
@@ -153,10 +153,10 @@ select_final_move' (UCTree _ state) = return m where
     (m, _) = maximumBy (compare `on` value) $ M.toList state
 {-# SPECIALIZE select_final_move' :: UCTree m -> IO m #-}
 
-uct_choose :: (Game a m, Ord m, MonadRandom r) => Int -> a -> r m
-uct_choose tries g = go tries $ empty_subtree $ moves g where
+uct_choose :: (Game a m, Ord m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
+uct_choose tries substrat g = go tries $ empty_subtree $ moves g where
     go tries tree | tries == 0 = select_final_move' tree
                   | otherwise = do
-      (tree', _) <- at_selected_state one_play_out g tree
+      (tree', _) <- at_selected_state (one_play_out substrat) g tree
       go (tries-1) tree'
-{-# SPECIALIZE uct_choose :: (Game a m, Ord m) => Int -> a -> IO m #-}
+{-# SPECIALIZE uct_choose :: (Game a m, Ord m) => Int -> (a -> IO m) -> a -> IO m #-}
