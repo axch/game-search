@@ -24,6 +24,10 @@ class (Eq a, Renderable a, Move m) => Game a m | a -> m where
     -- All the proofs I have found expect rewards to be in [0,1]
     payoff :: a -> Player -> Maybe Double -- Nothing if the game isn't over yet
     current :: a -> Player
+    known_one_move_wins :: a -> [m]
+    known_one_move_wins = const []
+    known_one_move_blocks :: a -> [m]
+    known_one_move_blocks = const []
 
 -- Decision: A Move is meant to be applicable to many positions (such
 -- as placing a piece in Go), as this seems more common than moves

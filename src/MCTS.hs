@@ -23,6 +23,14 @@ uniform_choose g = do
       n = length ms
 {-# SPECIALIZE uniform_choose :: (Game a m) => a -> IO m #-}
 
+take_obvious_plays :: (MonadRandom r, Game a m) => a -> r m
+take_obvious_plays g =
+  case known_one_move_wins g of
+    (m:_) -> return m
+    [] -> case known_one_move_blocks g of
+            (m:_) -> return m
+            [] -> uniform_choose g
+
 play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 play_out strat = go where
   go g | finished g = return g
