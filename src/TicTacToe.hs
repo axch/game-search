@@ -117,6 +117,24 @@ instance Game TicTacToe TicMove where
                  | otherwise = Just 0
     current (TicTacToe p _ _) = p
 
+-- Optimizations
+
+-- Filter the win masks by non-intersection with the opponent's
+-- positions.
+available_masks :: Mask -> [Mask]
+available_masks opp = filter available win_masks where
+    available mask = mask .&. opp == zeroBits
+
+one_off :: Mask -> Mask -> Maybe Mask
+one_off present needed = if popCount candidate == 1 then Just candidate else Nothing
+    where candidate = needed .&. (complement present)
+
+one_move_wins :: TicTacToe -> [TicMove]
+one_move_wins (TicTacToe (Player 0) xs os) =
+    map (TicMove (Player 0)) $ catMaybes $ map (one_off xs) $ available_masks os
+one_move_wins (TicTacToe (Player 1) xs os) =
+    map (TicMove (Player 1)) $ catMaybes $ map (one_off os) $ available_masks xs
+
 -- Debugging
 
 render_tic_tac_toe :: TicTacToe -> String
