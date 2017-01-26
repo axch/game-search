@@ -49,10 +49,11 @@ data OneLevel m = OneLevel Int (M.Map m (Double, Int))
 empty_level :: (Ord m) => [m] -> OneLevel m
 empty_level ms = OneLevel 0 $ M.fromList $ zip ms $ repeat (0, 0)
 
-update_once :: (Ord m, Game a m, MonadRandom r) => a -> m -> OneLevel m -> r (OneLevel m)
-update_once g m (OneLevel tot state) = do
+update_once :: (Ord m, Game a m, MonadRandom r) =>
+               (a -> r m) -> a -> m -> OneLevel m -> r (OneLevel m)
+update_once substrat g m (OneLevel tot state) = do
   g' <- move m g
-  g'' <- play_out uniform_choose g'
+  g'' <- play_out substrat g'
   let (Just p) = payoff g'' (current g)
   return $ OneLevel (tot+1) $ M.adjust (\(old_p, n) -> (old_p + p, n + 1)) m state
 
@@ -77,12 +78,12 @@ select_final_move (OneLevel _ state) = return m where
     value (_, (_, tries)) = tries
     (m, (_, _)) = maximumBy (compare `on` value) $ M.toList state
 
-ucb1_choose :: (Ord m, Game a m, MonadRandom r) => Int -> a -> r m
-ucb1_choose tries g = go tries $ empty_level $ moves g where
+ucb1_choose :: (Ord m, Game a m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
+ucb1_choose tries substrat g = go tries $ empty_level $ moves g where
     go tries level | tries == 0 = select_final_move level
                    | otherwise = do
       m <- select_move level
-      level' <- update_once g m level
+      level' <- update_once substrat g m level
       go (tries - 1) level'
 
 ----------------------------------------------------------------------
