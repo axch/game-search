@@ -16,13 +16,18 @@ import Types
 
 -- Configuration
 
-type Mask = Int
-
 board_width :: Int
 board_width = 3
 
 board_height :: Int
 board_height = 3
+
+win_length :: Int
+win_length = 3
+
+-- Computed configuration
+
+type Mask = Int
 
 board_size :: Int
 board_size = board_width * board_height
@@ -44,9 +49,6 @@ coords_to_bit_loc (r, c) = r * board_width + c
 
 in_board :: Int -> Int -> Bool
 in_board r c = 0 <= r && r < board_height && 0 <= c && c < board_width
-
-win_length :: Int
-win_length = 3
 
 win_cells :: [[(Int, Int)]]
 win_cells = concatMap candidates cells where
