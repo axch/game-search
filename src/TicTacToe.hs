@@ -1,5 +1,6 @@
 {-# LANGUAGE BinaryLiterals #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TupleSections #-}
 
 module TicTacToe where
 
@@ -7,6 +8,7 @@ module TicTacToe where
 -- Player 1 is O
 
 import Data.Bits
+import Data.Maybe
 
 import Data.Random (MonadRandom)
 
@@ -28,16 +30,37 @@ board_size = board_width * board_height
 move_masks :: [Mask]
 move_masks = map bit [0..(board_size - 1)]
 
+rows :: [Int]
+rows = [0..(board_height-1)]
+
+cols :: [Int]
+cols = [0..(board_width-1)]
+
+cells :: [(Int, Int)]
+cells = concatMap (\r -> map (r,) cols) rows
+
+coords_to_bit_loc :: (Int, Int) -> Int
+coords_to_bit_loc (r, c) = r * board_width + c
+
+in_board :: Int -> Int -> Bool
+in_board r c = 0 <= r && r < board_height && 0 <= c && c < board_width
+
+win_length :: Int
+win_length = 3
+
+win_cells :: [[(Int, Int)]]
+win_cells = concatMap candidates cells where
+    candidates cell = catMaybes $ map (candidate win_length cell) deltas
+    deltas = [(0, 1), (1, 0), (1, 1), (1, -1)]
+    candidate 1 (r, c) (_, _)   | in_board r c = Just [(r, c)]
+                                | otherwise = Nothing
+    candidate k (r, c) (dr, dc) = case candidate (k-1) (r + dr, c + dc) (dr, dc) of
+                                    Just places -> Just $ (r, c):places
+                                    Nothing -> Nothing
+
 win_masks :: [Mask]
-win_masks = [ 0b000000111
-            , 0b000111000
-            , 0b111000000
-            , 0b001001001
-            , 0b010010010
-            , 0b100100100
-            , 0b100010001
-            , 0b001010100
-            ]
+win_masks = map enmask win_cells where
+    enmask = (foldl (.|.) zeroBits) . (map bit) . (map coords_to_bit_loc)
 
 -- Implementation
 
