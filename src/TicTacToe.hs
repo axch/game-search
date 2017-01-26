@@ -17,13 +17,13 @@ import Types
 -- Configuration
 
 board_width :: Int
-board_width = 3
+board_width = 5
 
 board_height :: Int
-board_height = 3
+board_height = 5
 
 win_length :: Int
-win_length = 3
+win_length = 4
 
 -- Computed configuration
 
