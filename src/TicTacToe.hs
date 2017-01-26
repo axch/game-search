@@ -119,6 +119,8 @@ instance Game TicTacToe TicMove where
                  | otherwise = Just 0
     current (TicTacToe p _ _) = p
 
+-- Debugging
+
 render_tic_tac_toe :: TicTacToe -> String
 render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..(board_height - 1)] where
     row i = map cell [board_width*i..(board_width*(i+1) - 1)] ++ "\n"
@@ -128,3 +130,6 @@ render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..(board_height - 1)
 
 instance Renderable TicTacToe where
     render = putStrLn . render_tic_tac_toe
+
+winning_boards :: [TicTacToe]
+winning_boards = map (TicTacToe undefined zeroBits) win_masks
