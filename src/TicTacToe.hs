@@ -12,15 +12,9 @@ import Data.Random (MonadRandom)
 
 import Types
 
+-- Configuration
+
 type Mask = Int
-
-data TicTacToe = TicTacToe Player Mask Mask -- Mask of spaces each player occupies
-  deriving (Eq, Show)
-
-data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; should be a singleton
-  deriving (Eq, Ord, Show)
-
-instance Move TicMove where
 
 board_width :: Int
 board_width = 3
@@ -33,6 +27,27 @@ board_size = board_width * board_height
 
 move_masks :: [Mask]
 move_masks = map bit [0..(board_size - 1)]
+
+win_masks :: [Mask]
+win_masks = [ 0b000000111
+            , 0b000111000
+            , 0b111000000
+            , 0b001001001
+            , 0b010010010
+            , 0b100100100
+            , 0b100010001
+            , 0b001010100
+            ]
+
+-- Implementation
+
+data TicTacToe = TicTacToe Player Mask Mask -- Mask of spaces each player occupies
+  deriving (Eq, Show)
+
+data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; should be a singleton
+  deriving (Eq, Ord, Show)
+
+instance Move TicMove where
 
 place_ok :: TicTacToe -> Mask -> Bool
 place_ok (TicTacToe _ xs os) mask = popCount (mask .&. (xs .|. os)) == 0
@@ -54,17 +69,6 @@ tic_move (TicMove (Player 1) m) (TicTacToe p' xs os) =
 
 valid_tic_move :: TicMove -> TicTacToe -> Bool
 valid_tic_move (TicMove p m) g@(TicTacToe p' _ _) = p == p' && place_ok g m
-
-win_masks :: [Mask]
-win_masks = [ 0b000000111
-            , 0b000111000
-            , 0b111000000
-            , 0b001001001
-            , 0b010010010
-            , 0b100100100
-            , 0b100010001
-            , 0b001010100
-            ]
 
 mask_contains :: Mask -> Mask -> Bool
 mask_contains m1 m2 = m1 == m1 .&. m2
