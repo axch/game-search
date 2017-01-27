@@ -126,10 +126,12 @@ instance Game TicTacToe TicMove where
 available_masks :: Mask -> [Mask]
 available_masks opp = filter available win_masks where
     available mask = mask .&. opp == zeroBits
+{-# INLINE available_masks #-}
 
 one_off :: Mask -> Mask -> Maybe Mask
 one_off present needed = if popCount candidate == 1 then Just candidate else Nothing
     where candidate = needed .&. (complement present)
+{-# INLINE one_off #-}
 
 one_move_win_masks :: TicTacToe -> [Mask]
 one_move_win_masks (TicTacToe (Player 0) xs os) =
