@@ -10,6 +10,7 @@ module TicTacToe where
 import Data.Bits
 import Data.Char (ord)
 import Data.Maybe
+import Text.Printf (printf)
 
 import Types
 
@@ -150,11 +151,12 @@ one_move_win_blocks (TicTacToe p xs os) =
 -- Debugging
 
 render_tic_tac_toe :: TicTacToe -> String
-render_tic_tac_toe (TicTacToe _ xs os) = concat $ map row [0..(board_height - 1)] where
-    row i = map cell [board_width*i..(board_width*(i+1) - 1)] ++ "\n"
+render_tic_tac_toe (TicTacToe _ xs os) = (concat $ map row [0..(board_height - 1)]) ++ bottom where
+    row i = (printf "%2d " (i+1)) ++ map cell [board_width*i..(board_width*(i+1) - 1)] ++ "\n"
     cell i | testBit xs i = 'X'
            | testBit os i = 'O'
            | otherwise = '.'
+    bottom = "   " ++ take board_width ['a','b'..]
 
 instance Renderable TicTacToe where
     render = putStrLn . render_tic_tac_toe
