@@ -8,6 +8,7 @@ module TicTacToe where
 -- Player 1 is O
 
 import Data.Bits
+import Data.Char (ord)
 import Data.Maybe
 
 import Types
@@ -170,3 +171,10 @@ moves_at locs g = foldl (flip move_at) g locs
 
 instance Renderable TicMove where
     render m = render (tic_move m start)
+
+instance CtxParseable TicTacToe TicMove where
+    ctx_parse _ "" = Left "Blank move"
+    ctx_parse g (col:rows) = Right $ TicMove (current g) $ bit $ coords_to_bit_loc (r, c) where
+                                        c = ord col - ord 'a'
+                                        r = read rows - 1
+                                        -- TODO check for being in the board and not being on top of a piece?

@@ -14,6 +14,9 @@ class Move a where
 class Renderable a where
     render :: a -> IO ()
 
+class CtxParseable c a where
+    ctx_parse :: c -> String -> Either String a
+
 class (Eq a, Renderable a, Move m) => Game a m | a -> m where
     moves :: a -> [m]
     move  :: (MonadRandom r) => m -> a -> (r a) -- Random if it's Nature's move; TODO: make the distribution enumerable
