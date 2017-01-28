@@ -2,6 +2,7 @@ module Umpire where
 
 import Control.Monad
 import GHC.Base (assert)
+import System.IO
 
 import Data.Random (MonadRandom)
 
@@ -11,6 +12,7 @@ tty_choose :: (Game a m, CtxParseable a m) => a -> IO m
 tty_choose g = do
   render g
   putStr $ "You are " ++ show (current g) ++ " > "
+  hFlush stdout
   ans <- getLine
   case ctx_parse g ans of
     Left msg -> do
