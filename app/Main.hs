@@ -19,11 +19,11 @@ results g =
 win_probs :: Int -> TicTacToe -> IO ()
 win_probs n g = render_evaluation (match n (versus [uct_choose 100 uniform_choose, ucb1_choose 100 uniform_choose]) results) g
 
-benchmark :: Int -> Int -> IO ()
-benchmark games budget = render_evaluation (match games strat results) (start :: TicTacToe) where
-    strat = versus [(uct_choose budget take_obvious_plays), (uct_choose budget take_obvious_plays)]
+benchmark :: Int -> Int -> Int -> IO ()
+benchmark games budget1 budget2 = render_evaluation (match games strat results) (start :: TicTacToe) where
+    strat = versus [(uct_choose budget1 take_obvious_plays), (uct_choose budget2 take_obvious_plays)]
 
 main :: IO ()
 main = do
-  [arg1, arg2] <- Sys.getArgs
-  benchmark (read arg1) (read arg2)
+  [arg1, arg2, arg3] <- Sys.getArgs
+  benchmark (read arg1) (read arg2) (read arg3)
