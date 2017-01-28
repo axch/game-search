@@ -6,7 +6,7 @@ import qualified System.Environment as Sys
 import MCTS (uniform_choose, take_obvious_plays, ucb1_choose, uct_choose)
 import TicTacToe
 import Types
-import Umpire (match, versus, render_evaluation)
+import Umpire
 
 results :: TicTacToe -> (Sum Int, Sum Int, Sum Int)
 results g =
@@ -21,9 +21,18 @@ win_probs n g = render_evaluation (match n (versus [uct_choose 100 uniform_choos
 
 benchmark :: Int -> Int -> Int -> IO ()
 benchmark games budget1 budget2 = render_evaluation (match games strat results) (start :: TicTacToe) where
-    strat = versus [(uct_choose budget1 take_obvious_plays), (uct_choose budget2 take_obvious_plays)]
+    strat = versus [tty_choose, (uct_choose budget2 take_obvious_plays)]
+
+one_game :: Int -> IO ()
+one_game budget = render_one_game (game strat) (start :: TicTacToe) where
+    strat = versus [tty_choose, (uct_choose budget take_obvious_plays)]
 
 main :: IO ()
 main = do
-  [arg1, arg2, arg3] <- Sys.getArgs
-  benchmark (read arg1) (read arg2) (read arg3)
+  [arg1] <- Sys.getArgs
+  one_game (read arg1)
+
+-- main :: IO ()
+-- main = do
+--   [arg1, arg2, arg3] <- Sys.getArgs
+--   benchmark (read arg1) (read arg2) (read arg3)
