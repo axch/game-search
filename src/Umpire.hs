@@ -7,6 +7,24 @@ import Data.Random (MonadRandom)
 
 import Types
 
+tty_choose :: (Game a m, CtxParseable a m) => a -> IO m
+tty_choose g = do
+  render g
+  putStr $ "You are " ++ show (current g) ++ " > "
+  ans <- getLine
+  case ctx_parse g ans of
+    Left msg -> do
+      putStrLn "Your move did not parse"
+      putStrLn msg
+      putStrLn "Try again"
+      tty_choose g
+    Right m -> if valid m g then
+                   return m
+               else do
+                 putStrLn "Your move was invalid"
+                 putStrLn "Try again"
+                 tty_choose g
+
 render_one_move :: (Game a m) => (a -> IO m) -> a -> IO ()
 render_one_move strat g = do
   render g
