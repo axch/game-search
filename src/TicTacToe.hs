@@ -151,12 +151,14 @@ one_move_win_blocks (TicTacToe p xs os) =
 -- Debugging
 
 render_tic_tac_toe :: TicTacToe -> String
-render_tic_tac_toe (TicTacToe _ xs os) = (concat $ map row [0..(board_height - 1)]) ++ bottom where
+render_tic_tac_toe (TicTacToe _ xs os) = top ++ middle ++ bottom where
+    middle = concat $ map row [0..(board_height - 1)]
     row i = (printf "%2d " (i+1)) ++ map cell [board_width*i..(board_width*(i+1) - 1)] ++ "\n"
     cell i | testBit xs i = 'X'
            | testBit os i = 'O'
            | otherwise = '.'
     bottom = "   " ++ take board_width ['a','b'..]
+    top = "Get " ++ show win_length ++ " in a row\n"
 
 instance Renderable TicTacToe where
     render = putStrLn . render_tic_tac_toe
