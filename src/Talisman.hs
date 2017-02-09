@@ -8,11 +8,11 @@ import Types
 type Die = Int
 
 data Space = SValleyOfFire
-           | SFightWerewolf Int
 
 data Position = ValleyOfFire
               | SWerewolf
               | Werewolf Die Die
+              | SFightWerewolf Int
               | FightWerewolf Int Die Die
               | SDiceWithDeath
               | DiceWithDeath Die Die Die Die
@@ -26,10 +26,6 @@ data Position = ValleyOfFire
   deriving (Eq, Ord, Show)
 
 initial_position :: (Fractional p) => Space -> Probabilities p Position
-initial_position (SFightWerewolf str) = do
-  d1 <- d6
-  d2 <- d6
-  return $ FightWerewolf str d1 d2
 initial_position SValleyOfFire = return ValleyOfFire
 
 data Status = Status
@@ -83,6 +79,7 @@ available_moves (DiceWithDeathA _ _ _ _) = [Accept, Reroll 0, Reroll 1]
 available_moves (DiceWithDeathB _ _ _ _) = [Accept, Reroll 0, Reroll 1]
 available_moves SWerewolf = [Accept]
 available_moves (Werewolf _ _) = [Accept, Reroll 0, Reroll 1]
+available_moves (SFightWerewolf _) = [Accept]
 available_moves (FightWerewolf _ _ _) = [Accept, Reroll 0]
 available_moves ValleyOfFire = []
 
@@ -180,17 +177,21 @@ do_move Accept (Board n s SWerewolf) = do
   d2 <- d6
   return $ Board n s $ Werewolf d1 d2
 do_move Accept (Board n s (Werewolf d1 d2)) =
-    fmap (Board n s) $ initial_position (SFightWerewolf $ d1 + d2)
+    return $ Board n s $ SFightWerewolf $ d1 + d2
 do_move (Reroll 0) (Board n s (Werewolf d1 d2)) = do
   new_d <- d6
   do_move Accept $ Board n (lose_fate 1 s) $ Werewolf new_d d2
 do_move (Reroll 1) (Board n s (Werewolf d1 d2)) = do
   new_d <- d6
   do_move Accept $ Board n (lose_fate 1 s) $ Werewolf d1 new_d
-do_move Accept b@(Board n s p@(FightWerewolf str d1 d2))
+do_move Accept (Board n s (SFightWerewolf str)) = do
+  d1 <- d6
+  d2 <- d6
+  return $ Board n s $ FightWerewolf str d1 d2
+do_move Accept b@(Board n s (FightWerewolf str d1 d2))
     | combat_strength s + d1 > str + d2  = move_to SValleyOfFire b
-    | combat_strength s + d1 == str + d2 = move_to (SFightWerewolf str) b
-    | otherwise = move_to (SFightWerewolf str) $ Board n (lose_life 1 s) p
+    | combat_strength s + d1 == str + d2 = return $ Board (n-1) s (SFightWerewolf str)
+    | otherwise = return $ Board (n-1) (lose_life 1 s) (SFightWerewolf str)
 do_move (Reroll 0) (Board n s (FightWerewolf str d1 d2)) = do
   new_d <- d6
   do_move Accept $ Board n (lose_fate 1 s) $ FightWerewolf str new_d d2
