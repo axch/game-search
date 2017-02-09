@@ -88,9 +88,6 @@ d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.
 
 -- TODO: Define the dice lenses and rewrite all the Reroll cases to
 -- pick a lens and reroll that die.
--- TODO: Bug: All the dice rolling and resolution is part of the same
--- turn as moving a space.  I think the Crypt currently takes too many
--- turns to deal with.
 do_move :: (Fractional p) => Move -> Board -> Probabilities p Board
 do_move Accept (Board n s SPortalOfPower) = do
   d1 <- d6
@@ -113,9 +110,9 @@ do_move Accept (Board n s SCrypt) = do
   return $ Board n s $ Crypt d1 d2 d3
 do_move Accept b@(Board n s (Crypt d1 d2 d3))
     | strength s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
-    | strength s + 1 == d1 + d2 + d3 = return $ Board (n-1) s PlainOfPeril
-    | strength s + 2 == d1 + d2 + d3 = return $ Board (n-1) s SPortalOfPower
-    | strength s + 3 == d1 + d2 + d3 = return $ Board (n-1) s SPortalOfPower
+    | strength s + 1 == d1 + d2 + d3 = return $ Board (n-1) s SCrypt
+    | strength s + 2 == d1 + d2 + d3 = return $ Board n s SPortalOfPower -- Fencepost on counting steps
+    | strength s + 3 == d1 + d2 + d3 = return $ Board n s SPortalOfPower
     | otherwise = return $ Board (n-1) s SPortalOfPower -- TODO Model the outside
 do_move (Reroll 0) (Board n s (Crypt d1 d2 d3)) = do
   new_d <- d6
