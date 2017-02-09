@@ -1,8 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Types where
 
+import Control.Monad (ap)
 import Data.Maybe (isJust)
 
 import Data.Random (MonadRandom, sample)
@@ -27,11 +29,26 @@ class Mixable a p where
 instance Mixable Double Double where
     expectation (Probabilities items) = sum $ map (\(p, a) -> p * a) items
 
+-- Caveat: This instance does not try to collapse equal a objects, to
+-- avoid needing more instances.
+instance (Num p) => Mixable (Probabilities p a) p where
+    expectation (Probabilities items) = Probabilities $ concatMap scale items
+        where
+          scale (p, (Probabilities subitems)) = map (\(p1, a) -> (p * p1, a)) subitems
+
 instance Functor (Probabilities p) where
     fmap f (Probabilities items) = Probabilities $ zip ps as
         where
           ps = map fst items
           as = map (f . snd) items
+
+instance (Num p) => Applicative (Probabilities p) where
+    pure = return
+    (<*>) = ap
+
+instance (Num p) => Monad (Probabilities p) where
+    return a = Probabilities [(1, a)]
+    (>>=) ps f = expectation $ fmap f ps
 
 -- Nomenclature:
 -- - Game is the deterministic case
