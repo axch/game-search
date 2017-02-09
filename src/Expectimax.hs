@@ -20,3 +20,15 @@ best_move g | finished g = (Nothing, fromJust $ payoff g $ Player 0)
           where
             results :: Probabilities Double a
             results = r_move m g
+
+memoize :: (Ord a) => (a -> r) -> a -> r
+memoize f = unsafePerformIO (do
+  cacheRef <- newIORef M.empty
+  return $ \x -> unsafePerformIO (do
+                   cache <- readIORef cacheRef
+                   case M.lookup x cache of
+                     (Just v) -> return v
+                     Nothing -> do
+                       let v = f x
+                       modifyIORef' cacheRef (M.insert x v)
+                       return v))
