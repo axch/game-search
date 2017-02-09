@@ -35,8 +35,7 @@ play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the ret
 play_out strat = go where
   go g | finished g = return g
        | otherwise = do m <- strat g
-                        g' <- move m g
-                        go g'
+                        go $ move m g
 {-# SPECIALIZE play_out :: (Game a m) => (a -> IO m) -> a -> IO a #-}
 
 ----------------------------------------------------------------------
@@ -52,8 +51,7 @@ empty_level ms = OneLevel 0 $ M.fromList $ zip ms $ repeat (0, 0)
 update_once :: (Ord m, Game a m, MonadRandom r) =>
                (a -> r m) -> a -> m -> OneLevel m -> r (OneLevel m)
 update_once substrat g m (OneLevel tot state) = do
-  g' <- move m g
-  g'' <- play_out substrat g'
+  g'' <- play_out substrat $ move m g
   let (Just p) = payoff g'' (current g)
   return $ OneLevel (tot+1) $ M.adjust (\(old_p, n) -> (old_p + p, n + 1)) m state
 
@@ -125,7 +123,7 @@ at_selected_state :: (Game a m, Ord m, MonadRandom r) => (a -> r (Player -> Doub
                      -> r ((UCTree m), (Player -> Double))
 at_selected_state eval g t@(UCTree tot state) = do
   m <- select_move' t
-  g' <- move m g
+  let g' = move m g
   case fromJust $ M.lookup m state of
     (Just subtree, reward, tries) ->
         do (subtree', win) <- at_selected_state eval g' subtree

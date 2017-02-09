@@ -31,8 +31,7 @@ render_one_move :: (Game a m) => (a -> IO m) -> a -> IO ()
 render_one_move strat g = do
   render g
   m <- strat g
-  g' <- move m g
-  render g'
+  render $ move m g
 
 render_one_game :: (Renderable a) => (a -> IO a) -> a -> IO ()
 render_one_game strat g = do
@@ -55,8 +54,7 @@ game :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returne
 game strat = go where
   go g | finished g = return g
        | otherwise = do m <- strat g
-                        g' <- assert (valid m g) $ move m g
-                        go g'
+                        go $ assert (valid m g) $ move m g
 {-# SPECIALIZE game :: (Game a m) => (a -> IO m) -> a -> IO a #-}
 
 match :: (Monoid res, Game a m, MonadRandom r) => Int -> (a -> r m) -> (a -> res) -> a -> r res

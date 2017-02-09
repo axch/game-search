@@ -19,12 +19,12 @@ class CtxParseable c a where
 
 class (Eq a, Renderable a, Move m) => Game a m | a -> m where
     moves :: a -> [m]
-    move  :: (MonadRandom r) => m -> a -> (r a) -- Random if it's Nature's move; TODO: make the distribution enumerable
+    move  :: m -> a -> a
     valid :: m -> a -> Bool
     start :: a
     finished :: a -> Bool
     finished a = isJust $ payoff a (Player 0)
-    -- All the proofs I have found expect rewards to be in [0,1]
+    -- All the proofs of UCT properties I have found expect rewards to be in [0,1]
     payoff :: a -> Player -> Maybe Double -- Nothing if the game isn't over yet
     current :: a -> Player
     known_one_move_wins :: a -> [m]

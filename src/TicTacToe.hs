@@ -107,7 +107,7 @@ winner (TicTacToe _ xs os)
 
 instance Game TicTacToe TicMove where
     moves = tic_moves
-    move m = return . tic_move m
+    move m = tic_move m
     valid = valid_tic_move
     start = TicTacToe (Player 0) zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
