@@ -30,7 +30,7 @@ newtype Probabilities p a = Probabilities [(p, a)]
 
 class (Eq a, Renderable a, Move m) => RGame a m | a -> m where
     moves :: a -> [m]
-    r_move :: (Num p) => m -> a -> Probabilities p a
+    r_move :: (Fractional p) => m -> a -> Probabilities p a
     valid :: m -> a -> Bool
     start :: a
     finished :: a -> Bool
