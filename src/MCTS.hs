@@ -117,8 +117,6 @@ select_move' (UCTree tot state) = return m where
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
 -- function for the caller's benefit.
--- TODO: Since the move's result may be stochastic, I have to know what
--- Nature chose in order to select the proper sub-tree.
 at_selected_state :: (Game a m, Ord m, MonadRandom r) => (a -> r (Player -> Double)) -> a -> UCTree m
                      -> r ((UCTree m), (Player -> Double))
 at_selected_state eval g t@(UCTree tot state) = do
