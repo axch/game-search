@@ -105,9 +105,9 @@ winner (TicTacToe _ xs os)
     | popCount (xs .|. os) == board_size = Left $ Just () -- Draw
     | otherwise = Left Nothing
 
-instance Game TicTacToe TicMove where
+instance RGame TicTacToe TicMove where
     moves = tic_moves
-    move m = tic_move m
+    r_move = default_r_move
     valid = valid_tic_move
     start = TicTacToe (Player 0) zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
@@ -120,6 +120,9 @@ instance Game TicTacToe TicMove where
     current (TicTacToe p _ _) = p
     known_one_move_wins = one_move_wins
     known_one_move_blocks = one_move_win_blocks
+
+instance Game TicTacToe TicMove where
+    move m = tic_move m
 
 -- Optimizations
 
