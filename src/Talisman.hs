@@ -11,7 +11,6 @@ data Space = SValleyOfFire
            | SFightWerewolf Int
            | SCrypt
            | SPlainOfPeril
-           | SPortalOfPower
 
 data Position = ValleyOfFire
               | SWerewolf
@@ -23,14 +22,11 @@ data Position = ValleyOfFire
               | DiceWithDeathB Die Die Die Die -- Rerolled one of Death's first
               | Crypt Die Die Die
               | PlainOfPeril
+              | SPortalOfPower
               | PortalOfPower Die Die
   deriving (Eq, Ord, Show)
 
 initial_position :: (Fractional p) => Space -> Probabilities p Position
-initial_position SPortalOfPower = do
-  d1 <- d6
-  d2 <- d6
-  return $ PortalOfPower d1 d2
 initial_position SPlainOfPeril = return PlainOfPeril
 initial_position SCrypt = do
   d1 <- d6
@@ -83,6 +79,7 @@ data Move = Accept
   deriving Show
 
 available_moves :: Position -> [Move]
+available_moves SPortalOfPower = [Accept]
 available_moves (PortalOfPower _ _) = [Accept, Reroll 0, Reroll 1]
 available_moves PlainOfPeril = [Accept]
 available_moves (Crypt _ _ _) = [Accept, Reroll 0, Reroll 1, Reroll 2]
@@ -112,9 +109,13 @@ d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.
 -- turn as moving a space.  I think the Crypt currently takes too many
 -- turns to deal with.
 do_move :: (Fractional p) => Move -> Board -> Probabilities p Board
-do_move Accept b@(Board n s p@(PortalOfPower d1 d2))
+do_move Accept (Board n s SPortalOfPower) = do
+  d1 <- d6
+  d2 <- d6
+  return $ Board n s $ PortalOfPower d1 d2
+do_move Accept b@(Board n s (PortalOfPower d1 d2))
     | strength s >= d1 + d2 = move_to SPlainOfPeril b
-    | otherwise = move_to SPortalOfPower $ (Board n (lose_strength 1 s) p)
+    | otherwise = return $ Board (n-1) (lose_strength 1 s) SPortalOfPower
 do_move (Reroll 0) (Board n s (PortalOfPower d1 d2)) = do
   new_d <- d6
   do_move Accept (Board n (lose_fate 1 s) (PortalOfPower new_d d2))
@@ -125,9 +126,9 @@ do_move Accept b@(Board _ _ PlainOfPeril) = move_to SCrypt b
 do_move Accept b@(Board n s (Crypt d1 d2 d3))
     | strength s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
     | strength s + 1 == d1 + d2 + d3 = move_to SPlainOfPeril b
-    | strength s + 2 == d1 + d2 + d3 = move_to SPortalOfPower b
-    | strength s + 3 == d1 + d2 + d3 = move_to SPortalOfPower b
-    | otherwise = move_to SPortalOfPower b -- TODO Model the outside
+    | strength s + 2 == d1 + d2 + d3 = return $ Board (n-1) s SPortalOfPower
+    | strength s + 3 == d1 + d2 + d3 = return $ Board (n-1) s SPortalOfPower
+    | otherwise = return $ Board (n-1) s SPortalOfPower -- TODO Model the outside
 do_move (Reroll 0) (Board n s (Crypt d1 d2 d3)) = do
   new_d <- d6
   do_move Accept (Board n (lose_fate 1 s) (Crypt new_d d2 d3))
