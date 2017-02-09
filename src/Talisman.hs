@@ -10,7 +10,6 @@ type Die = Int
 data Space = SValleyOfFire
            | SFightWerewolf Int
            | SCrypt
-           | SPlainOfPeril
 
 data Position = ValleyOfFire
               | SWerewolf
@@ -27,7 +26,6 @@ data Position = ValleyOfFire
   deriving (Eq, Ord, Show)
 
 initial_position :: (Fractional p) => Space -> Probabilities p Position
-initial_position SPlainOfPeril = return PlainOfPeril
 initial_position SCrypt = do
   d1 <- d6
   d2 <- d6
@@ -114,7 +112,7 @@ do_move Accept (Board n s SPortalOfPower) = do
   d2 <- d6
   return $ Board n s $ PortalOfPower d1 d2
 do_move Accept b@(Board n s (PortalOfPower d1 d2))
-    | strength s >= d1 + d2 = move_to SPlainOfPeril b
+    | strength s >= d1 + d2 = return $ Board (n-1) s PlainOfPeril
     | otherwise = return $ Board (n-1) (lose_strength 1 s) SPortalOfPower
 do_move (Reroll 0) (Board n s (PortalOfPower d1 d2)) = do
   new_d <- d6
@@ -125,7 +123,7 @@ do_move (Reroll 1) (Board n s (PortalOfPower d1 d2)) = do
 do_move Accept b@(Board _ _ PlainOfPeril) = move_to SCrypt b
 do_move Accept b@(Board n s (Crypt d1 d2 d3))
     | strength s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
-    | strength s + 1 == d1 + d2 + d3 = move_to SPlainOfPeril b
+    | strength s + 1 == d1 + d2 + d3 = return $ Board (n-1) s PlainOfPeril
     | strength s + 2 == d1 + d2 + d3 = return $ Board (n-1) s SPortalOfPower
     | strength s + 3 == d1 + d2 + d3 = return $ Board (n-1) s SPortalOfPower
     | otherwise = return $ Board (n-1) s SPortalOfPower -- TODO Model the outside
