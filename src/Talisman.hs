@@ -7,8 +7,6 @@ import Types
 
 type Die = Int
 
-data Space = SValleyOfFire
-
 data Position = ValleyOfFire
               | SWerewolf
               | Werewolf Die Die
@@ -24,9 +22,6 @@ data Position = ValleyOfFire
               | SPortalOfPower
               | PortalOfPower Die Die
   deriving (Eq, Ord, Show)
-
-initial_position :: (Fractional p) => Space -> Probabilities p Position
-initial_position SValleyOfFire = return ValleyOfFire
 
 data Status = Status
     { lives :: Int
@@ -57,9 +52,6 @@ data Board = Board Int Status Position -- The int is the amount of time left
 
 instance Renderable Board where
     render = putStrLn . show
-
-move_to :: (Fractional p) => Space -> Board -> Probabilities p Board
-move_to spc (Board n s _) = fmap (Board (n-1) s) $ initial_position spc
 
 -- The only choices in this model are when to use fate tokens, and
 -- which dice to reroll
@@ -189,7 +181,7 @@ do_move Accept (Board n s (SFightWerewolf str)) = do
   d2 <- d6
   return $ Board n s $ FightWerewolf str d1 d2
 do_move Accept b@(Board n s (FightWerewolf str d1 d2))
-    | combat_strength s + d1 > str + d2  = move_to SValleyOfFire b
+    | combat_strength s + d1 > str + d2  = return $ Board (n-1) s ValleyOfFire
     | combat_strength s + d1 == str + d2 = return $ Board (n-1) s (SFightWerewolf str)
     | otherwise = return $ Board (n-1) (lose_life 1 s) (SFightWerewolf str)
 do_move (Reroll 0) (Board n s (FightWerewolf str d1 d2)) = do
