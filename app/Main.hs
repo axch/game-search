@@ -4,9 +4,11 @@ import Data.Monoid
 import qualified System.Environment as Sys
 
 import MCTS (uniform_choose, take_obvious_plays, ucb1_choose, uct_choose)
+import Expectimax (best_move)
 import TicTacToe
 import Types
 import Umpire
+import Talisman as Tal
 
 results :: TicTacToe -> (Sum Int, Sum Int, Sum Int)
 results g =
@@ -27,12 +29,20 @@ one_game :: Int -> IO ()
 one_game budget = render_one_game (game strat) (start :: TicTacToe) where
     strat = versus [tty_choose, (uct_choose budget take_obvious_plays)]
 
-main :: IO ()
-main = do
+do_one_game :: IO ()
+do_one_game = do
   [arg1] <- Sys.getArgs
   one_game (read arg1)
 
--- main :: IO ()
--- main = do
---   [arg1, arg2, arg3] <- Sys.getArgs
---   benchmark (read arg1) (read arg2) (read arg3)
+do_benchmark :: IO ()
+do_benchmark = do
+  [arg1, arg2, arg3] <- Sys.getArgs
+  benchmark (read arg1) (read arg2) (read arg3)
+
+-- main = do_one_game
+-- main = do_benchmark
+
+main :: IO ()
+main = do
+  [time, lives, fate, strength] <- Sys.getArgs
+  putStrLn $ show $ best_move $ Tal.Board (read time) (Tal.Status (read lives) (read fate) (read strength) 0 0) Tal.SPortalOfPower
