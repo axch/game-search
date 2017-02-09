@@ -8,13 +8,13 @@ import Types
 type Die = Int
 
 data Space = SValleyOfFire
-           | SWerewolf
            | SFightWerewolf Int
            | SCrypt
            | SPlainOfPeril
            | SPortalOfPower
 
 data Position = ValleyOfFire
+              | SWerewolf
               | Werewolf Die Die
               | FightWerewolf Int Die Die
               | SDiceWithDeath
@@ -37,10 +37,6 @@ initial_position SCrypt = do
   d2 <- d6
   d3 <- d6
   return $ Crypt d1 d2 d3
-initial_position SWerewolf = do
-  d1 <- d6
-  d2 <- d6
-  return $ Werewolf d1 d2
 initial_position (SFightWerewolf str) = do
   d1 <- d6
   d2 <- d6
@@ -94,6 +90,7 @@ available_moves SDiceWithDeath = [Accept]
 available_moves (DiceWithDeath _ _ _ _) = [Accept, Reroll 0, Reroll 1, Reroll 2, Reroll 3]
 available_moves (DiceWithDeathA _ _ _ _) = [Accept, Reroll 0, Reroll 1]
 available_moves (DiceWithDeathB _ _ _ _) = [Accept, Reroll 0, Reroll 1]
+available_moves SWerewolf = [Accept]
 available_moves (Werewolf _ _) = [Accept, Reroll 0, Reroll 1]
 available_moves (FightWerewolf _ _ _) = [Accept, Reroll 0]
 available_moves ValleyOfFire = []
@@ -140,14 +137,14 @@ do_move (Reroll 1) (Board n s (Crypt d1 d2 d3)) = do
 do_move (Reroll 2) (Board n s (Crypt d1 d2 d3)) = do
   new_d <- d6
   do_move Accept (Board n (lose_fate 1 s) (Crypt d1 d2 new_d))
-do_move Accept b@(Board n s SDiceWithDeath) = do
+do_move Accept (Board n s SDiceWithDeath) = do
   d1 <- d6
   d2 <- d6
   d3 <- d6
   d4 <- d6
   return $ Board n s $ DiceWithDeath d1 d2 d3 d4
-do_move Accept b@(Board n s p@(DiceWithDeath d1 d2 d3 d4))
-    | d1 + d2 >  d3 + d4 = move_to SWerewolf b
+do_move Accept (Board n s (DiceWithDeath d1 d2 d3 d4))
+    | d1 + d2 >  d3 + d4 = return $ Board (n-1) s SWerewolf
     | d1 + d2 == d3 + d4 = return $ Board (n-1) s SDiceWithDeath
     | otherwise = return $ Board (n-1) (lose_life 1 s) SDiceWithDeath
 do_move (Reroll 0) (Board n s (DiceWithDeath d1 d2 d3 d4)) = do
@@ -178,6 +175,10 @@ do_move (Reroll 0) (Board n s (DiceWithDeathB d1 d2 d3 d4)) = do
 do_move (Reroll 1) (Board n s (DiceWithDeathB d1 d2 d3 d4)) = do
   new_d <- d6
   do_move Accept $ Board n (lose_fate 1 s) $ DiceWithDeath d1 new_d d3 d4
+do_move Accept (Board n s SWerewolf) = do
+  d1 <- d6
+  d2 <- d6
+  return $ Board n s $ Werewolf d1 d2
 do_move Accept (Board n s (Werewolf d1 d2)) =
     fmap (Board n s) $ initial_position (SFightWerewolf $ d1 + d2)
 do_move (Reroll 0) (Board n s (Werewolf d1 d2)) = do
