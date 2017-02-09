@@ -19,6 +19,20 @@ class CtxParseable c a where
 -- components sum to 1.
 newtype Probabilities p a = Probabilities [(p, a)]
 
+-- Objects a that support a "mixture" operation using probabilities of
+-- type p.
+class Mixable a p where
+    expectation :: Probabilities p a -> a
+
+instance Mixable Double Double where
+    expectation (Probabilities items) = sum $ map (\(p, a) -> p * a) items
+
+instance Functor (Probabilities p) where
+    fmap f (Probabilities items) = Probabilities $ zip ps as
+        where
+          ps = map fst items
+          as = map (f . snd) items
+
 -- Nomenclature:
 -- - Game is the deterministic case
 -- - m is the move type
