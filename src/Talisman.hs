@@ -24,7 +24,7 @@ data Position = ValleyOfFire
               | Crypt Die Die Die
               | PlainOfPeril
               | PortalOfPower Die Die
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 initial_position :: (Fractional p) => Space -> Probabilities p Position
 initial_position SPortalOfPower = do
@@ -60,7 +60,7 @@ data Status = Status
     , more_strength :: Int
     , combat_bonus :: Int
     }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 lose_life :: Int -> Status -> Status
 lose_life k Status {..} = Status {lives = max 0 (lives - k), ..}
@@ -78,7 +78,7 @@ lose_strength :: Int -> Status -> Status
 lose_strength k Status {..} = Status {more_strength = max 0 (more_strength - k), ..}
 
 data Board = Board Int Status Position -- The int is the amount of time left
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 instance Renderable Board where
     render = putStrLn . show
