@@ -72,8 +72,6 @@ data TicTacToe = TicTacToe Player Mask Mask -- Mask of spaces each player occupi
 data TicMove = TicMove Player Mask -- Mask to .|. with that player's spaces; should be a singleton
   deriving (Eq, Ord, Show)
 
-instance Move TicMove where
-
 place_ok :: TicTacToe -> Mask -> Bool
 place_ok (TicTacToe _ xs os) mask = (mask .&. (xs .|. os)) == zeroBits
 

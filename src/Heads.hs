@@ -12,8 +12,6 @@ import Types
 
 data Heads = Play | Won deriving (Eq, Show)
 
-instance Move ()
-
 instance Renderable Heads where
     render = putStrLn . show
 

@@ -9,8 +9,6 @@ import Data.Random (MonadRandom, sample)
 
 newtype Player = Player Int deriving (Eq, Ord, Show)
 
-class Move a where
-
 class Renderable a where
     render :: a -> IO ()
 
@@ -23,12 +21,13 @@ newtype Probabilities p a = Probabilities [(p, a)]
 
 -- Nomenclature:
 -- - Game is the deterministic case
+-- - m is the move type
 -- - RGame and r_move is a random game (but with known outcome probabilities)
 -- - [Later] SGame and s_move is for a sampling-only random game
 --   (where the outcome probabilities are not exposed to analysis,
 --   e.g. for performance).
 
-class (Eq a, Renderable a, Move m) => RGame a m | a -> m where
+class (Eq a, Renderable a) => RGame a m | a -> m where
     moves :: a -> [m]
     r_move :: (Fractional p) => m -> a -> Probabilities p a
     valid :: m -> a -> Bool
@@ -43,7 +42,7 @@ class (Eq a, Renderable a, Move m) => RGame a m | a -> m where
     known_one_move_blocks :: a -> [m]
     known_one_move_blocks = const []
 
--- Decision: A Move is meant to be applicable to many positions (such
+-- Decision: A move is meant to be applicable to many positions (such
 -- as placing a piece in Go), as this seems more common than moves
 -- being bound to the positions they come from.
 
