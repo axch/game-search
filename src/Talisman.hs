@@ -9,7 +9,6 @@ type Die = Int
 
 data Space = SValleyOfFire
            | SFightWerewolf Int
-           | SCrypt
 
 data Position = ValleyOfFire
               | SWerewolf
@@ -19,6 +18,7 @@ data Position = ValleyOfFire
               | DiceWithDeath Die Die Die Die
               | DiceWithDeathA Die Die Die Die -- Rerolled one of mine first
               | DiceWithDeathB Die Die Die Die -- Rerolled one of Death's first
+              | SCrypt
               | Crypt Die Die Die
               | PlainOfPeril
               | SPortalOfPower
@@ -26,11 +26,6 @@ data Position = ValleyOfFire
   deriving (Eq, Ord, Show)
 
 initial_position :: (Fractional p) => Space -> Probabilities p Position
-initial_position SCrypt = do
-  d1 <- d6
-  d2 <- d6
-  d3 <- d6
-  return $ Crypt d1 d2 d3
 initial_position (SFightWerewolf str) = do
   d1 <- d6
   d2 <- d6
@@ -80,6 +75,7 @@ available_moves :: Position -> [Move]
 available_moves SPortalOfPower = [Accept]
 available_moves (PortalOfPower _ _) = [Accept, Reroll 0, Reroll 1]
 available_moves PlainOfPeril = [Accept]
+available_moves SCrypt = [Accept]
 available_moves (Crypt _ _ _) = [Accept, Reroll 0, Reroll 1, Reroll 2]
 available_moves SDiceWithDeath = [Accept]
 available_moves (DiceWithDeath _ _ _ _) = [Accept, Reroll 0, Reroll 1, Reroll 2, Reroll 3]
@@ -120,7 +116,12 @@ do_move (Reroll 0) (Board n s (PortalOfPower d1 d2)) = do
 do_move (Reroll 1) (Board n s (PortalOfPower d1 d2)) = do
   new_d <- d6
   do_move Accept (Board n (lose_fate 1 s) (PortalOfPower d1 new_d))
-do_move Accept b@(Board _ _ PlainOfPeril) = move_to SCrypt b
+do_move Accept (Board n s PlainOfPeril) = return $ Board (n-1) s SCrypt
+do_move Accept (Board n s SCrypt) = do
+  d1 <- d6
+  d2 <- d6
+  d3 <- d6
+  return $ Board n s $ Crypt d1 d2 d3
 do_move Accept b@(Board n s (Crypt d1 d2 d3))
     | strength s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
     | strength s + 1 == d1 + d2 + d3 = return $ Board (n-1) s PlainOfPeril
