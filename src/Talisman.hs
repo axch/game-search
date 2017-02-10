@@ -3,16 +3,17 @@
 
 module Talisman where
 
+import Data.Word (Word8)
 import Types
 
-type SmallInt = Int
-type Die = Int
+type SmallInt = Word8
+type Die = SmallInt
 
 data Position = ValleyOfFire
               | SWerewolf
               | Werewolf Die Die
-              | SFightWerewolf Int
-              | FightWerewolf Int Die Die
+              | SFightWerewolf SmallInt
+              | FightWerewolf SmallInt Die Die
               | SDiceWithDeath
               | DiceWithDeath Die Die Die Die
               | DiceWithDeathA Die Die Die Die -- Rerolled one of mine first
@@ -25,11 +26,11 @@ data Position = ValleyOfFire
   deriving (Eq, Ord, Show)
 
 data Status = Status
-    { lives :: Int
-    , fate :: Int
-    , base_strength :: Int
-    , more_strength :: Int
-    , combat_bonus :: Int
+    { lives :: SmallInt
+    , fate :: SmallInt
+    , base_strength :: SmallInt
+    , more_strength :: SmallInt
+    , combat_bonus :: SmallInt
     }
   deriving (Eq, Ord, Show)
 
@@ -37,22 +38,22 @@ minus :: SmallInt -> SmallInt -> SmallInt
 minus n k | n >= k = n - k
           | otherwise = 0
 
-lose_life :: Int -> Status -> Status
+lose_life :: SmallInt -> Status -> Status
 lose_life k Status {..} = Status {lives = (lives `minus` k), ..}
 
-lose_fate :: Int -> Status -> Status
+lose_fate :: SmallInt -> Status -> Status
 lose_fate k Status {..} = Status {fate = (fate `minus` k), ..}
 
-strength :: Status -> Int
+strength :: Status -> SmallInt
 strength Status {..} = base_strength + more_strength
 
-combat_strength :: Status -> Int
+combat_strength :: Status -> SmallInt
 combat_strength Status {..} = base_strength + more_strength + combat_bonus
 
-lose_strength :: Int -> Status -> Status
+lose_strength :: SmallInt -> Status -> Status
 lose_strength k Status {..} = Status {more_strength = (more_strength `minus` k), ..}
 
-data Board = Board Int Status Position -- The int is the amount of time left
+data Board = Board SmallInt Status Position -- The int is the amount of time left
   deriving (Eq, Ord, Show)
 
 instance Renderable Board where
@@ -61,7 +62,7 @@ instance Renderable Board where
 -- The only choices in this model are when to use fate tokens, and
 -- which dice to reroll
 data Move = Proceed
-          | Reroll Int -- The index of the die to reroll
+          | Reroll SmallInt -- The index of the die to reroll
   deriving Show
 
 available_moves :: Position -> [Move]
@@ -88,7 +89,7 @@ available_moves ValleyOfFire = []
 -- - Modeling the outside world, for variable results from the mine
 -- - Modeling the gnome or dwarf ability
 
-d6 :: (Fractional p) => Probabilities p Int
+d6 :: (Fractional p) => Probabilities p SmallInt
 d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.0/6
 
 -- TODO: Define the dice lenses and rewrite all the Reroll cases to
