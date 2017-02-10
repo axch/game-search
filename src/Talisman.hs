@@ -5,6 +5,7 @@ module Talisman where
 
 import Types
 
+type SmallInt = Int
 type Die = Int
 
 data Position = ValleyOfFire
@@ -32,11 +33,15 @@ data Status = Status
     }
   deriving (Eq, Ord, Show)
 
+minus :: SmallInt -> SmallInt -> SmallInt
+minus n k | n >= k = n - k
+          | otherwise = 0
+
 lose_life :: Int -> Status -> Status
-lose_life k Status {..} = Status {lives = max 0 (lives - k), ..}
+lose_life k Status {..} = Status {lives = (lives `minus` k), ..}
 
 lose_fate :: Int -> Status -> Status
-lose_fate k Status {..} = Status {fate = max 0 (fate - k), ..}
+lose_fate k Status {..} = Status {fate = (fate `minus` k), ..}
 
 strength :: Status -> Int
 strength Status {..} = base_strength + more_strength
@@ -45,7 +50,7 @@ combat_strength :: Status -> Int
 combat_strength Status {..} = base_strength + more_strength + combat_bonus
 
 lose_strength :: Int -> Status -> Status
-lose_strength k Status {..} = Status {more_strength = max 0 (more_strength - k), ..}
+lose_strength k Status {..} = Status {more_strength = (more_strength `minus` k), ..}
 
 data Board = Board Int Status Position -- The int is the amount of time left
   deriving (Eq, Ord, Show)
