@@ -89,6 +89,9 @@ available_moves ValleyOfFire = []
 -- - The craft path
 -- - Modeling the outside world, for variable results from the mine
 -- - Modeling the gnome or dwarf ability
+-- - Detail: Monk's combat bonus depends on their bonus craft, so can change
+-- - Detail: Warrior rolls an extra die during combat, which changes
+--   win probs and usefulness of fate
 
 d6 :: (Fractional p) => Probabilities p SmallInt
 d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.0/6
