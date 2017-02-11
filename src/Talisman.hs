@@ -103,13 +103,13 @@ do_move Proceed (Board n s SPortalOfPower) = do
   d1 <- d6
   d2 <- d6
   return $ Board n s $ PortalOfPower d1 d2
-do_move Proceed b@(Board n s (PortalOfPower d1 d2))
+do_move Proceed (Board n s (PortalOfPower d1 d2))
     | strength s >= d1 + d2 = return $ Board (n-1) s PlainOfPeril
     | otherwise = return $ Board (n-1) (lose_strength 1 s) SPortalOfPower
-do_move (Reroll 0) (Board n s (PortalOfPower d1 d2)) = do
+do_move (Reroll 0) (Board n s (PortalOfPower _ d2)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (PortalOfPower new_d d2))
-do_move (Reroll 1) (Board n s (PortalOfPower d1 d2)) = do
+do_move (Reroll 1) (Board n s (PortalOfPower d1 _)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (PortalOfPower d1 new_d))
 do_move Proceed (Board n s PlainOfPeril) = return $ Board (n-1) s SCrypt
@@ -118,19 +118,19 @@ do_move Proceed (Board n s SCrypt) = do
   d2 <- d6
   d3 <- d6
   return $ Board n s $ Crypt d1 d2 d3
-do_move Proceed b@(Board n s (Crypt d1 d2 d3))
+do_move Proceed (Board n s (Crypt d1 d2 d3))
     | strength s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
     | strength s + 1 == d1 + d2 + d3 = return $ Board (n-1) s SCrypt
     | strength s + 2 == d1 + d2 + d3 = return $ Board n s SPortalOfPower -- Fencepost on counting steps
     | strength s + 3 == d1 + d2 + d3 = return $ Board n s SPortalOfPower
     | otherwise = return $ Board (n-1) s SPortalOfPower -- TODO Model the outside
-do_move (Reroll 0) (Board n s (Crypt d1 d2 d3)) = do
+do_move (Reroll 0) (Board n s (Crypt _ d2 d3)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (Crypt new_d d2 d3))
-do_move (Reroll 1) (Board n s (Crypt d1 d2 d3)) = do
+do_move (Reroll 1) (Board n s (Crypt d1 _ d3)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (Crypt d1 new_d d3))
-do_move (Reroll 2) (Board n s (Crypt d1 d2 d3)) = do
+do_move (Reroll 2) (Board n s (Crypt d1 d2 _)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (Crypt d1 d2 new_d))
 do_move Proceed (Board n s SDiceWithDeath) = do
@@ -143,32 +143,32 @@ do_move Proceed (Board n s (DiceWithDeath d1 d2 d3 d4))
     | d1 + d2 >  d3 + d4 = return $ Board (n-1) s SWerewolf
     | d1 + d2 == d3 + d4 = return $ Board (n-1) s SDiceWithDeath
     | otherwise = return $ Board (n-1) (lose_life 1 s) SDiceWithDeath
-do_move (Reroll 0) (Board n s (DiceWithDeath d1 d2 d3 d4)) = do
+do_move (Reroll 0) (Board n s (DiceWithDeath _ d2 d3 d4)) = do
   new_d <- d6
   return $ Board n (lose_fate 1 s) $ DiceWithDeathA new_d d2 d3 d4
-do_move (Reroll 1) (Board n s (DiceWithDeath d1 d2 d3 d4)) = do
+do_move (Reroll 1) (Board n s (DiceWithDeath d1 _ d3 d4)) = do
   new_d <- d6
   return $ Board n (lose_fate 1 s) $ DiceWithDeathA d1 new_d d3 d4
-do_move (Reroll 2) (Board n s (DiceWithDeath d1 d2 d3 d4)) = do
+do_move (Reroll 2) (Board n s (DiceWithDeath d1 d2 _ d4)) = do
   new_d <- d6
   return $ Board n (lose_fate 1 s) $ DiceWithDeathB d1 d2 new_d d4
-do_move (Reroll 3) (Board n s (DiceWithDeath d1 d2 d3 d4)) = do
+do_move (Reroll 3) (Board n s (DiceWithDeath d1 d2 d3 _)) = do
   new_d <- d6
   return $ Board n (lose_fate 1 s) $ DiceWithDeathB d1 d2 d3 new_d
 do_move Proceed (Board n s (DiceWithDeathA d1 d2 d3 d4)) =
     do_move Proceed $ Board n s $ DiceWithDeath d1 d2 d3 d4
-do_move (Reroll 0) (Board n s (DiceWithDeathA d1 d2 d3 d4)) = do
+do_move (Reroll 0) (Board n s (DiceWithDeathA d1 d2 _ d4)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ DiceWithDeath d1 d2 new_d d4
-do_move (Reroll 1) (Board n s (DiceWithDeathA d1 d2 d3 d4)) = do
+do_move (Reroll 1) (Board n s (DiceWithDeathA d1 d2 d3 _)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ DiceWithDeath d1 d2 d3 new_d
 do_move Proceed (Board n s (DiceWithDeathB d1 d2 d3 d4)) =
     do_move Proceed $ Board n s $ DiceWithDeath d1 d2 d3 d4
-do_move (Reroll 0) (Board n s (DiceWithDeathB d1 d2 d3 d4)) = do
+do_move (Reroll 0) (Board n s (DiceWithDeathB _ d2 d3 d4)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ DiceWithDeath new_d d2 d3 d4
-do_move (Reroll 1) (Board n s (DiceWithDeathB d1 d2 d3 d4)) = do
+do_move (Reroll 1) (Board n s (DiceWithDeathB d1 _ d3 d4)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ DiceWithDeath d1 new_d d3 d4
 do_move Proceed (Board n s SWerewolf) = do
@@ -177,29 +177,29 @@ do_move Proceed (Board n s SWerewolf) = do
   return $ Board n s $ Werewolf d1 d2
 do_move Proceed (Board n s (Werewolf d1 d2)) =
     return $ Board n s $ SFightWerewolf $ d1 + d2
-do_move (Reroll 0) (Board n s (Werewolf d1 d2)) = do
+do_move (Reroll 0) (Board n s (Werewolf _ d2)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ Werewolf new_d d2
-do_move (Reroll 1) (Board n s (Werewolf d1 d2)) = do
+do_move (Reroll 1) (Board n s (Werewolf d1 _)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ Werewolf d1 new_d
 do_move Proceed (Board n s (SFightWerewolf str)) = do
   d1 <- d6
   d2 <- d6
   return $ Board n s $ FightWerewolf str d1 d2
-do_move Proceed b@(Board n s (FightWerewolf str d1 d2))
+do_move Proceed (Board n s (FightWerewolf str d1 d2))
     | combat_strength s + d1 > str + d2  = return $ Board (n-1) s ValleyOfFire
     | combat_strength s + d1 == str + d2 = return $ Board (n-1) s (SFightWerewolf str)
     | otherwise = return $ Board (n-1) (lose_life 1 s) (SFightWerewolf str)
-do_move (Reroll 0) (Board n s (FightWerewolf str d1 d2)) = do
+do_move (Reroll 0) (Board n s (FightWerewolf str _ d2)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ FightWerewolf str new_d d2
 
 instance RGame Board Move where
-    moves (Board n Status{..} p) | fate == 0 = [Proceed]
+    moves (Board _ Status{..} p) | fate == 0 = [Proceed]
                                  | otherwise = available_moves p
     r_move = do_move
-    valid m = const True -- TODO: Actually validate the moves
+    valid _ = const True -- TODO: Actually validate the moves
     start = undefined -- There are many possible start statuses
     payoff (Board 0 _ _) (Player 0) = Just 0
     payoff (Board _ Status{lives=0} _) (Player 0) = Just 0
