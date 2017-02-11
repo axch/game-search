@@ -1,7 +1,9 @@
 module Main where
 
+import Data.Foldable (forM_)
 import Data.Monoid
 import qualified System.Environment as Sys
+import Text.Printf
 
 import MCTS (uniform_choose, take_obvious_plays, ucb1_choose, uct_choose)
 import Expectimax (best_move)
@@ -44,5 +46,16 @@ do_benchmark = do
 
 main :: IO ()
 main = do
-  [time, lives, fate, strength] <- Sys.getArgs
-  putStrLn $ show $ best_move $ Tal.Board (read time) (Tal.Status (read lives) (read fate) (read strength) 0 0) Tal.SPortalOfPower
+  [max_time, max_lives, max_fate, max_strength] <- Sys.getArgs
+  forM_ [6..(read max_time)]     (\time ->
+   forM_ [1..(read max_lives)]    (\lives -> (do
+    putStrLn $ show time ++ " turns " ++ show lives ++ " lives "
+    putStr "fate"
+    forM_ [1..(read max_strength)] (\strength -> printf " %2d str" (strength :: Int))
+    putStrLn ""
+    forM_ [0..(read max_fate)]     (\fate -> (do
+     printf "%4d" fate
+     forM_ [1..(read max_strength)] (\strength -> (do
+      let (_, value) = best_move $ Tal.Board time (Tal.Status lives fate strength 0 0) Tal.SPortalOfPower
+      printf " %5.2f%%" $ 100 * value))
+     putStrLn "")))))
