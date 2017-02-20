@@ -46,16 +46,18 @@ do_benchmark = do
 
 main :: IO ()
 main = do
-  [max_time, max_lives, max_fate, max_strength] <- Sys.getArgs
+  [max_time, max_lives, max_fate, in_strength, max_more, in_bonus] <- Sys.getArgs
+  let strength = read in_strength
+      bonus = read in_bonus
+  putStrLn $ show strength ++ " base strength, " ++ show bonus ++ " combat bonus "
   forM_ [6..(read max_time)]     (\time ->
    forM_ [1..(read max_lives)]    (\lives -> (do
-    putStrLn $ show time ++ " turns " ++ show lives ++ " lives "
-    putStr "fate"
-    forM_ [1..(read max_strength)] (\strength -> printf " %2d str" (strength :: Int))
+    putStr "str bon time life fate"
+    forM_ [0..(read max_more)] (\more_strength -> printf " %1d mstr" (more_strength :: Int))
     putStrLn ""
     forM_ [0..(read max_fate)]     (\fate -> (do
-     printf "%4d" fate
-     forM_ [1..(read max_strength)] (\strength -> (do
-      let (_, value) = best_move $ Tal.Board time (Tal.Status lives fate strength 0 0) Tal.SPortalOfPower
+     printf "%3d %3d %4d %4d %4d" strength bonus time lives fate
+     forM_ [0..(read max_more)] (\more_strength -> (do
+      let (_, value) = best_move $ Tal.Board time (Tal.Status lives fate strength more_strength bonus) Tal.SPortalOfPower
       printf " %5.2f%%" $ 100 * value))
      putStrLn "")))))
