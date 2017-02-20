@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Various game-playing programs against a common interface
 description:         Please see README.md
 homepage:            https://github.com/axch/game-search#readme
-license:             BSD3
+license:             Apache
 license-file:        LICENSE
 author:              Alexey Radul
 maintainer:          axch@mit.edu
