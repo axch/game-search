@@ -194,6 +194,7 @@ do_move Proceed (Board n s (FightWerewolf str d1 d2))
 do_move (Reroll 0) (Board n s (FightWerewolf str _ d2)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ FightWerewolf str new_d d2
+do_move move board = error $ "Move " ++ show move ++ " is not legal from board " ++ show board
 
 instance RGame Board Move where
     moves (Board _ Status{..} p) | fate == 0 = [Proceed]
