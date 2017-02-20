@@ -19,8 +19,8 @@
 
 module GameSearch.Games.TicTacToe where
 
--- Player 0 is X
--- Player 1 is O
+-- Player1 is X
+-- Player2 is O
 
 import Data.Bits
 import Data.Char (ord)
