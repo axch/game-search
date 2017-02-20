@@ -17,6 +17,8 @@
 
 module GameSearch.Umpire where
 
+-- Running games and tournaments, including against a human player.
+
 import Control.Monad
 import GHC.Base (assert)
 import System.IO

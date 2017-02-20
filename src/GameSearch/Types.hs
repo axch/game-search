@@ -19,6 +19,8 @@
 
 module GameSearch.Types where
 
+-- Base definitions; Game interface.
+
 import Control.Monad (ap)
 import Data.Maybe (isJust)
 

@@ -17,6 +17,9 @@
 
 module GameSearch.Expectimax where
 
+-- Exact Expectimax computations (for games whose state space is small
+-- enough for this to be feasible).
+
 import Data.Function (on)
 import Data.IORef
 import Data.List (maximumBy)

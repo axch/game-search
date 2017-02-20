@@ -14,6 +14,8 @@
 
 module GameSearch.MCTS where
 
+-- Monte Carlo Tree Search style players: random playouts, UCB1, UCT.
+
 import Data.Function (on)
 import Data.List (maximumBy)
 import qualified Data.Map as M

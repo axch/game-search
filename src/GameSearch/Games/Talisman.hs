@@ -19,6 +19,32 @@
 
 module GameSearch.Games.Talisman where
 
+-- A partial implementation of the endgame of the board game Talisman,
+-- currently published by Fantasy Flight Games.
+-- https://www.fantasyflightgames.com/en/products/talisman/
+
+-- This is interesting because
+-- a) Attempting to get from the Portal of Power to the Crown of
+--    Command is almost exactly a (stochastic) single-player
+--    solitaire.
+-- b) Its state space is small enough to be amenable to exhaustive
+--    search, but large enough that one needs a computer to carry this
+--    search out.
+-- c) Choosing when to attempt it is a significant decision in one's
+--    play of the overall game.
+
+-- So far, this is a reasonable model of the Crypt-Death-Werewolf fork.
+
+-- TODO expand the model with:
+-- - The craft attribute
+-- - Choosing whether to open the Portal with craft (as opposed to strength)
+-- - The Mine-Vampire-Pits fork
+-- - Modeling the outside world, for variable results from the crypt/mine
+-- - Modeling the gnome or dwarf ability
+-- - Detail: Monk's combat bonus depends on their bonus craft, so can change
+-- - Detail: Warrior rolls an extra die during combat, which changes
+--   win probs and usefulness of fate
+
 import Data.Word (Word8)
 
 import GameSearch.Types
@@ -97,17 +123,6 @@ available_moves (Werewolf _ _) = [Proceed, Reroll 0, Reroll 1]
 available_moves (SFightWerewolf _) = [Proceed]
 available_moves (FightWerewolf _ _ _) = [Proceed, Reroll 0]
 available_moves ValleyOfFire = []
-
-
--- TODO: Model:
--- - The craft attribute
--- - Choosing whether to open the Portal with craft (as opposed to strength)
--- - The craft path
--- - Modeling the outside world, for variable results from the mine
--- - Modeling the gnome or dwarf ability
--- - Detail: Monk's combat bonus depends on their bonus craft, so can change
--- - Detail: Warrior rolls an extra die during combat, which changes
---   win probs and usefulness of fate
 
 d6 :: (Fractional p) => Probabilities p SmallInt
 d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.0/6

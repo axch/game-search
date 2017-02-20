@@ -14,6 +14,8 @@
 
 module Main where
 
+-- Executable driver.  Tweak `main` and recompile to change function.
+
 import Data.Foldable (forM_)
 import Data.Monoid
 import qualified System.Environment as Sys

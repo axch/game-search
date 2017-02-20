@@ -19,8 +19,15 @@
 
 module GameSearch.Games.TicTacToe where
 
--- Player1 is X
--- Player2 is O
+-- Generalized tic-tac-toe, admitting rectangular boards of arbitrary
+-- size (up to 63 squares) and arbitrary-length straight paths needed
+-- to win.
+
+-- This class of games turns out to have a name and a mathematical
+-- community interested in it: https://en.wikipedia.org/wiki/M,n,k-game
+
+-- Player1 is Xs
+-- Player2 is Os
 
 import Data.Bits
 import Data.Char (ord)
@@ -33,6 +40,10 @@ import qualified GameSearch.Types as Types
 type Player = Types.TwoPlayer
 
 -- Configuration
+
+-- For the sake of performance, the board size and win condition are
+-- hardcoded here, and will need to be edited to experiment with other
+-- boards.  Everything else is derived from these constants.
 
 board_width :: Int
 board_width = 7
