@@ -1,8 +1,8 @@
-mcts-exe.pdf:
-	stack build --profile && time stack exec -- mcts-exe 100 200 +RTS -hd && hp2ps mcts-exe.hp && ps2pdf mcts-exe.ps
+game-search-exe.pdf:
+	stack build --profile && time stack exec -- game-search-exe 100 200 +RTS -hd && hp2ps game-search-exe.hp && ps2pdf game-search-exe.ps
 
-mcts-exe.prof:
-	stack build --profile && time stack exec -- mcts-exe 100 200 +RTS -p
+game-search-exe.prof:
+	stack build --profile && time stack exec -- game-search-exe 100 200 +RTS -p
 
 time:
-	stack build && time stack exec mcts-exe 100 200
+	stack build && time stack exec game-search-exe 100 200

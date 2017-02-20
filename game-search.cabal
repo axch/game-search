@@ -1,8 +1,8 @@
-name:                mcts
+name:                game-search
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            https://github.com/githubuser/mcts#readme
+homepage:            https://github.com/githubuser/game-search#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
@@ -23,23 +23,23 @@ library
   ghc-options:         -O2 -fno-ignore-asserts -Wall
   default-language:    Haskell2010
 
-executable mcts-exe
+executable game-search-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:       base
-                     , mcts
+                     , game-search
   default-language:    Haskell2010
 
-test-suite mcts-test
+test-suite game-search-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
-                     , mcts
+                     , game-search
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/mcts
+  location: https://github.com/githubuser/game-search
