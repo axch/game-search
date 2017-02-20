@@ -9,7 +9,7 @@ import System.IO
 
 import Data.Random (MonadRandom)
 
-import Types
+import Types hiding (start)
 
 tty_choose :: (Game a m, CtxParseable a m, Show (Player a)) => a -> IO m
 tty_choose g = do

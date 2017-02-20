@@ -10,7 +10,7 @@ import Expectimax (best_move)
 import TicTacToe
 import Types
 import Umpire
-import Talisman as Tal
+import qualified Talisman as Tal
 
 results :: TicTacToe -> (Sum Int, Sum Int, Sum Int)
 results g =
@@ -24,7 +24,7 @@ win_probs :: Int -> TicTacToe -> IO ()
 win_probs n g = render_evaluation (match n (uct_choose 100 uniform_choose `versus` ucb1_choose 100 uniform_choose)  results) g
 
 benchmark :: Int -> Int -> Int -> IO ()
-benchmark games budget1 budget2 = render_evaluation (match games strat results) (start :: TicTacToe) where
+benchmark games _budget1 budget2 = render_evaluation (match games strat results) (start :: TicTacToe) where
     strat = tty_choose `versus` uct_choose budget2 take_obvious_plays
 
 one_game :: Int -> IO ()

@@ -195,7 +195,7 @@ do_move Proceed (Board n s (FightWerewolf str d1 d2))
 do_move (Reroll 0) (Board n s (FightWerewolf str _ d2)) = do
   new_d <- d6
   do_move Proceed $ Board n (lose_fate 1 s) $ FightWerewolf str new_d d2
-do_move move board = error $ "Move " ++ show move ++ " is not legal from board " ++ show board
+do_move mv brd = error $ "Move " ++ show mv ++ " is not legal from board " ++ show brd
 
 instance RGame Board Move where
     type Player Board = Solitaire

@@ -184,7 +184,7 @@ instance Renderable TicMove where
 
 instance CtxParseable TicTacToe TicMove where
     ctx_parse _ "" = Left "Blank move"
-    ctx_parse g (col:rows) = Right $ TicMove (current g) $ bit $ coords_to_bit_loc (r, c) where
-                                        c = ord col - ord 'a'
-                                        r = read rows - 1
+    ctx_parse g (col_c:row_cs) = Right $ TicMove (current g) $ bit $ coords_to_bit_loc (r, c) where
+                                        c = ord col_c - ord 'a'
+                                        r = read row_cs - 1
                                         -- TODO check for being in the board and not being on top of a piece?

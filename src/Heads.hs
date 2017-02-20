@@ -43,6 +43,7 @@ instance RGame TimedHeads () where
     moves (TPlay _) = [()]
     moves TWon = []
     r_move _ (TPlay n) = Probabilities [(1/2, (TPlay $ n-1)), (1/2, TWon)]
+    r_move _ TWon = error $ "Cannot move from state " ++ show TWon
     valid _ (TPlay _) = True
     valid _ TWon = False
     start = TPlay 5

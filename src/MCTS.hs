@@ -78,11 +78,11 @@ select_final_move (OneLevel _ state) = return m where
 
 ucb1_choose :: (Ord m, Game a m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
 ucb1_choose tries substrat g = go tries $ empty_level $ moves g where
-    go tries level | tries == 0 = select_final_move level
-                   | otherwise = do
+    go tries_left level | tries_left == 0 = select_final_move level
+                        | otherwise = do
       m <- select_move level
       level' <- update_once substrat g m level
-      go (tries - 1) level'
+      go (tries_left - 1) level'
 
 ----------------------------------------------------------------------
 -- UCT
@@ -152,8 +152,8 @@ select_final_move' (UCTree _ state) = return m where
 
 uct_choose :: (Game a m, Ord m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
 uct_choose tries substrat g = go tries $ empty_subtree $ moves g where
-    go tries tree | tries == 0 = select_final_move' tree
-                  | otherwise = do
+    go tries_left tree | tries_left == 0 = select_final_move' tree
+                       | otherwise = do
       (tree', _) <- at_selected_state (one_play_out substrat) g tree
-      go (tries-1) tree'
+      go (tries_left-1) tree'
 {-# SPECIALIZE uct_choose :: (Game a m, Ord m) => Int -> (a -> IO m) -> a -> IO m #-}
