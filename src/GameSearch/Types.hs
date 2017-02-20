@@ -17,7 +17,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Types where
+module GameSearch.Types where
 
 import Control.Monad (ap)
 import Data.Maybe (isJust)

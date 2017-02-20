@@ -15,7 +15,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Expectimax where
+module GameSearch.Expectimax where
 
 import Data.Function (on)
 import Data.IORef
@@ -24,7 +24,7 @@ import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import System.IO.Unsafe
 
-import Types
+import GameSearch.Types
 
 -- Compute the move (if not terminal) that maximizes the expected
 -- utility from this position, as well as the value thereof, assuming

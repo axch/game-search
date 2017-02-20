@@ -19,12 +19,12 @@ import Data.Monoid
 import qualified System.Environment as Sys
 import Text.Printf
 
-import MCTS (uniform_choose, take_obvious_plays, ucb1_choose, uct_choose)
-import Expectimax (best_move)
-import TicTacToe
-import Types
-import Umpire
-import qualified Talisman as Tal
+import GameSearch.MCTS (uniform_choose, take_obvious_plays, ucb1_choose, uct_choose)
+import GameSearch.Expectimax (best_move)
+import GameSearch.Games.TicTacToe
+import GameSearch.Types
+import GameSearch.Umpire
+import qualified GameSearch.Games.Talisman as Tal
 
 results :: TicTacToe -> (Sum Int, Sum Int, Sum Int)
 results g =

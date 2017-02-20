@@ -17,7 +17,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module TicTacToe where
+module GameSearch.Games.TicTacToe where
 
 -- Player 0 is X
 -- Player 1 is O
@@ -27,8 +27,8 @@ import Data.Char (ord)
 import Data.Maybe
 import Text.Printf (printf)
 
-import Types hiding (Player)
-import qualified Types
+import GameSearch.Types hiding (Player)
+import qualified GameSearch.Types as Types
 
 type Player = Types.TwoPlayer
 

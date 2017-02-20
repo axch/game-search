@@ -17,10 +17,11 @@
 {-# LANGUAGE StrictData #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Talisman where
+module GameSearch.Games.Talisman where
 
 import Data.Word (Word8)
-import Types
+
+import GameSearch.Types
 
 type SmallInt = Word8
 type Die = SmallInt

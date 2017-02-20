@@ -12,7 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-module MCTS where
+module GameSearch.MCTS where
 
 import Data.Function (on)
 import Data.List (maximumBy)
@@ -23,7 +23,7 @@ import GHC.Base (assert)
 import Data.Random
 import qualified Data.Random.Distribution.Uniform as Uni
 
-import Types
+import GameSearch.Types
 
 ones :: [Double]
 ones = 1:ones

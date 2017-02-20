@@ -15,7 +15,13 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Types, MCTS, Expectimax, TicTacToe, Umpire, Heads, Talisman
+  exposed-modules:     GameSearch.Types
+                     , GameSearch.MCTS
+                     , GameSearch.Expectimax
+                     , GameSearch.Games.TicTacToe
+                     , GameSearch.Umpire
+                     , GameSearch.Games.Heads
+                     , GameSearch.Games.Talisman
   build-depends:       base >= 4.7 && < 5
                      , containers
                      , lens

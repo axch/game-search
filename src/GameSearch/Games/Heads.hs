@@ -15,9 +15,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Heads where
+module GameSearch.Games.Heads where
 
-import Types
+import GameSearch.Types
 
 -- The Heads game: flip a fair coin until you get heads.
 
