@@ -1,14 +1,14 @@
 name:                game-search
 version:             0.1.0.0
-synopsis:            Initial project template from stack
+synopsis:            Various game-playing programs against a common interface
 description:         Please see README.md
-homepage:            https://github.com/githubuser/game-search#readme
+homepage:            https://github.com/axch/game-search#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
-category:            Web
+author:              Alexey Radul
+maintainer:          axch@mit.edu
+copyright:           2017 Alexey Radul
+category:            Game
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
@@ -42,4 +42,4 @@ test-suite game-search-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/game-search
+  location: https://github.com/axch/game-search
