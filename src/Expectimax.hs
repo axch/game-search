@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Expectimax where
 
@@ -15,9 +16,9 @@ import Types
 -- utility from this position, as well as the value thereof, assuming
 -- solitaire and exhaustive search.
 
-best_move :: forall a m. (Ord a, RGame a m) => a -> (Maybe m, Double)
+best_move :: forall a m. (Ord a, RGame a m, Player a ~ Solitaire) => a -> (Maybe m, Double)
 best_move = answer where
-  go g | finished g = (Nothing, fromJust $ payoff g $ Player 0)
+  go g | finished g = (Nothing, fromJust $ payoff g Self)
        | otherwise = maximumBy (compare `on` snd) $ map evaluate $ moves g
     where
       evaluate m = (Just m, expectation $ fmap (snd . answer) results)

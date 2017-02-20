@@ -1,6 +1,7 @@
 {-# LANGUAGE BinaryLiterals #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module TicTacToe where
 
@@ -12,7 +13,10 @@ import Data.Char (ord)
 import Data.Maybe
 import Text.Printf (printf)
 
-import Types
+import Types hiding (Player)
+import qualified Types
+
+type Player = Types.TwoPlayer
 
 -- Configuration
 
@@ -79,15 +83,15 @@ tic_moves :: TicTacToe -> [TicMove]
 tic_moves g@(TicTacToe p _ _) = map (TicMove p) $ filter (place_ok g) move_masks
 
 opponent :: Player -> Player
-opponent (Player 0) = Player 1
-opponent (Player 1) = Player 0
+opponent Player1 = Player2
+opponent Player2 = Player1
 
 -- TODO: The eternal dilemma: to check or to assume the validity of
 -- the move?  I suppose I will want the unchecked version...
 tic_move :: TicMove -> TicTacToe -> TicTacToe
-tic_move (TicMove (Player 0) m) (TicTacToe p' xs os) =
+tic_move (TicMove Player1 m) (TicTacToe p' xs os) =
     TicTacToe (opponent p') (xs .|. m) os
-tic_move (TicMove (Player 1) m) (TicTacToe p' xs os) =
+tic_move (TicMove Player2 m) (TicTacToe p' xs os) =
     TicTacToe (opponent p') xs (os .|. m)
 
 valid_tic_move :: TicMove -> TicTacToe -> Bool
@@ -98,16 +102,17 @@ mask_contains m1 m2 = m1 == m1 .&. m2
 
 winner :: TicTacToe -> Either (Maybe ()) Player -- Left $ Just () means 'draw'
 winner (TicTacToe _ xs os)
-    | any (flip mask_contains xs) win_masks = Right $ Player 0
-    | any (flip mask_contains os) win_masks = Right $ Player 1
+    | any (flip mask_contains xs) win_masks = Right $ Player1
+    | any (flip mask_contains os) win_masks = Right $ Player2
     | popCount (xs .|. os) == board_size = Left $ Just () -- Draw
     | otherwise = Left Nothing
 
 instance RGame TicTacToe TicMove where
+    type Player TicTacToe = TwoPlayer
     moves = tic_moves
     r_move = default_r_move
     valid = valid_tic_move
-    start = TicTacToe (Player 0) zeroBits zeroBits
+    start = TicTacToe Player1 zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
     payoff g = assess where
         win = winner g
@@ -137,9 +142,9 @@ one_off present needed = if popCount candidate == 1 then Just candidate else Not
 {-# INLINE one_off #-}
 
 one_move_win_masks :: TicTacToe -> [Mask]
-one_move_win_masks (TicTacToe (Player 0) xs os) =
+one_move_win_masks (TicTacToe Player1 xs os) =
     catMaybes $ map (one_off xs) $ available_masks os
-one_move_win_masks (TicTacToe (Player 1) xs os) =
+one_move_win_masks (TicTacToe Player2 xs os) =
     catMaybes $ map (one_off os) $ available_masks xs
 
 one_move_wins :: TicTacToe -> [TicMove]

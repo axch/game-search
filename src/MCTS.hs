@@ -117,8 +117,8 @@ select_move' (UCTree tot state) = return m where
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
 -- function for the caller's benefit.
-at_selected_state :: (Game a m, Ord m, MonadRandom r) => (a -> r (Player -> Double)) -> a -> UCTree m
-                     -> r ((UCTree m), (Player -> Double))
+at_selected_state :: (Game a m, Ord m, MonadRandom r) => (a -> r (Player a -> Double)) -> a -> UCTree m
+                     -> r ((UCTree m), (Player a -> Double))
 at_selected_state eval g t@(UCTree tot state) = do
   m <- select_move' t
   let g' = move m g
@@ -133,14 +133,14 @@ at_selected_state eval g t@(UCTree tot state) = do
                           else Just $ empty_subtree (moves g')
                state' = M.insert m (subtree', reward + win (current g), tries + 1) state
            return (UCTree (tot+1) state', win)
-{-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player -> Double)) -> a -> UCTree m
-  -> IO ((UCTree m), (Player -> Double)) #-}
+{-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player a -> Double)) -> a -> UCTree m
+  -> IO ((UCTree m), (Player a -> Double)) #-}
 
-one_play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r (Player -> Double)
+one_play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r (Player a -> Double)
 one_play_out strat g = do
   end <- play_out strat g
   return $ fromJust . payoff end
-{-# SPECIALIZE one_play_out :: (Game a m) => (a -> IO m) -> a -> IO (Player -> Double) #-}
+{-# SPECIALIZE one_play_out :: (Game a m) => (a -> IO m) -> a -> IO (Player a -> Double) #-}
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case

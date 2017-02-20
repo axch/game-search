@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StrictData #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Talisman where
 
@@ -197,13 +198,14 @@ do_move (Reroll 0) (Board n s (FightWerewolf str _ d2)) = do
 do_move move board = error $ "Move " ++ show move ++ " is not legal from board " ++ show board
 
 instance RGame Board Move where
+    type Player Board = Solitaire
     moves (Board _ Status{..} p) | fate == 0 = [Proceed]
                                  | otherwise = available_moves p
     r_move = do_move
     valid _ = const True -- TODO: Actually validate the moves
     start = undefined -- There are many possible start statuses
-    payoff (Board 0 _ _) (Player 0) = Just 0
-    payoff (Board _ Status{lives=0} _) (Player 0) = Just 0
-    payoff (Board _ _ ValleyOfFire) (Player 0) = Just 1
-    payoff _ (Player 0) = Nothing
-    current = const (Player 0)
+    payoff (Board 0 _ _) Self = Just 0
+    payoff (Board _ Status{lives=0} _) Self = Just 0
+    payoff (Board _ _ ValleyOfFire) Self = Just 1
+    payoff _ Self = Nothing
+    current = const Self

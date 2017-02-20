@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module Umpire where
 
 import Control.Monad
@@ -8,7 +11,7 @@ import Data.Random (MonadRandom)
 
 import Types
 
-tty_choose :: (Game a m, CtxParseable a m) => a -> IO m
+tty_choose :: (Game a m, CtxParseable a m, Show (Player a)) => a -> IO m
 tty_choose g = do
   render g
   putStr $ "You are " ++ show (current g) ++ " > "
@@ -45,9 +48,10 @@ render_evaluation eval g = do
   res <- eval g
   putStrLn $ show res
 
-versus :: (Game a m) => [(a -> b)] -> a -> b
-versus strats g = (strats!!i) g where
-    (Player i) = current g
+versus :: (Game a m, Player a ~ TwoPlayer) => (a -> b) -> (a -> b) -> a -> b
+versus strat1 strat2 g = case current g of
+                           Player1 -> strat1 g
+                           Player2 -> strat2 g
 {-# INLINE versus #-}
 
 game :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal

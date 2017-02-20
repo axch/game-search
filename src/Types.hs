@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Types where
@@ -7,7 +8,9 @@ module Types where
 import Control.Monad (ap)
 import Data.Maybe (isJust)
 
-newtype Player = Player Int deriving (Eq, Ord, Show)
+data Solitaire = Self deriving (Eq, Ord, Show)
+
+data TwoPlayer = Player1 | Player2 deriving (Eq, Ord, Show)
 
 class Renderable a where
     render :: a -> IO ()
@@ -57,15 +60,16 @@ instance (Num p) => Monad (Probabilities p) where
 --   e.g. for performance).
 
 class (Eq a, Renderable a) => RGame a m | a -> m where
+    type Player a :: *
     moves :: a -> [m]
     r_move :: (Fractional p) => m -> a -> Probabilities p a
     valid :: m -> a -> Bool
     start :: a
     finished :: a -> Bool
-    finished a = isJust $ payoff a (Player 0)
+    finished a = isJust $ payoff a $ current a
     -- All the proofs of UCT properties I have found expect rewards to be in [0,1]
-    payoff :: a -> Player -> Maybe Double -- Nothing if the game isn't over yet
-    current :: a -> Player
+    payoff :: a -> Player a -> Maybe Double -- Nothing if the game isn't over yet
+    current :: a -> Player a
     known_one_move_wins :: a -> [m]
     known_one_move_wins = const []
     known_one_move_blocks :: a -> [m]

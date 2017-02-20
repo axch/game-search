@@ -15,21 +15,21 @@ import Talisman as Tal
 results :: TicTacToe -> (Sum Int, Sum Int, Sum Int)
 results g =
     case winner g of
-      Right (Player 0) -> (Sum 1, Sum 0, Sum 0)
-      Right (Player 1) -> (Sum 0, Sum 1, Sum 0)
+      Right Player1 -> (Sum 1, Sum 0, Sum 0)
+      Right Player2 -> (Sum 0, Sum 1, Sum 0)
       Left (Just ()) -> (Sum 0, Sum 0, Sum 1)
       Left Nothing -> (Sum 0, Sum 0, Sum 0)
 
 win_probs :: Int -> TicTacToe -> IO ()
-win_probs n g = render_evaluation (match n (versus [uct_choose 100 uniform_choose, ucb1_choose 100 uniform_choose]) results) g
+win_probs n g = render_evaluation (match n (uct_choose 100 uniform_choose `versus` ucb1_choose 100 uniform_choose)  results) g
 
 benchmark :: Int -> Int -> Int -> IO ()
 benchmark games budget1 budget2 = render_evaluation (match games strat results) (start :: TicTacToe) where
-    strat = versus [tty_choose, (uct_choose budget2 take_obvious_plays)]
+    strat = tty_choose `versus` uct_choose budget2 take_obvious_plays
 
 one_game :: Int -> IO ()
 one_game budget = render_one_game (game strat) (start :: TicTacToe) where
-    strat = versus [tty_choose, (uct_choose budget take_obvious_plays)]
+    strat = tty_choose `versus` uct_choose budget take_obvious_plays
 
 do_one_game :: IO ()
 do_one_game = do
