@@ -126,7 +126,6 @@ instance RGame TicTacToe TicMove where
     moves = tic_moves
     r_move = default_r_move
     valid = valid_tic_move
-    start = TicTacToe Player1 zeroBits zeroBits
     finished g = not (winner g == Left Nothing)
     payoff g = assess where
         win = winner g
@@ -140,6 +139,9 @@ instance RGame TicTacToe TicMove where
 
 instance Game TicTacToe TicMove where
     move m = tic_move m
+
+start :: TicTacToe
+start = TicTacToe Player1 zeroBits zeroBits
 
 -- Optimizations
 

@@ -37,7 +37,6 @@ instance RGame Heads () where
     r_move _ _ = Probabilities [(1/2, Play), (1/2, Won)]
     valid _ Play = True
     valid _ Won = False
-    start = Play
     finished Play = False
     finished Won = True
     payoff Play Self = Nothing
@@ -60,7 +59,6 @@ instance RGame TimedHeads () where
     r_move _ TWon = error $ "Cannot move from state " ++ show TWon
     valid _ (TPlay _) = True
     valid _ TWon = False
-    start = TPlay 5
     finished (TPlay 0) = True
     finished (TPlay _) = False
     finished TWon = True

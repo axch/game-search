@@ -218,7 +218,6 @@ instance RGame Board Move where
                                  | otherwise = available_moves p
     r_move = do_move
     valid _ = const True -- TODO: Actually validate the moves
-    start = undefined -- There are many possible start statuses
     payoff (Board 0 _ _) Self = Just 0
     payoff (Board _ Status{lives=0} _) Self = Just 0
     payoff (Board _ _ ValleyOfFire) Self = Just 1

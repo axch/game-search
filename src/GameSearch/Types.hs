@@ -78,7 +78,6 @@ class (Eq a, Renderable a) => RGame a m | a -> m where
     moves :: a -> [m]
     r_move :: (Fractional p) => m -> a -> Probabilities p a
     valid :: m -> a -> Bool
-    start :: a
     finished :: a -> Bool
     finished a = isJust $ payoff a $ current a
     -- All the proofs of UCT properties I have found expect rewards to be in [0,1]

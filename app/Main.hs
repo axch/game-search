@@ -38,11 +38,11 @@ win_probs :: Int -> TicTacToe -> IO ()
 win_probs n g = render_evaluation (match n (uct_choose 100 uniform_choose `versus` ucb1_choose 100 uniform_choose)  results) g
 
 benchmark :: Int -> Int -> Int -> IO ()
-benchmark games _budget1 budget2 = render_evaluation (match games strat results) (start :: TicTacToe) where
+benchmark games _budget1 budget2 = render_evaluation (match games strat results) start where
     strat = tty_choose `versus` uct_choose budget2 take_obvious_plays
 
 one_game :: Int -> IO ()
-one_game budget = render_one_game (game strat) (start :: TicTacToe) where
+one_game budget = render_one_game (game strat) start where
     strat = tty_choose `versus` uct_choose budget take_obvious_plays
 
 do_one_game :: IO ()
