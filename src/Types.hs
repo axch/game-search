@@ -7,8 +7,6 @@ module Types where
 import Control.Monad (ap)
 import Data.Maybe (isJust)
 
-import Data.Random (MonadRandom, sample)
-
 newtype Player = Player Int deriving (Eq, Ord, Show)
 
 class Renderable a where
@@ -81,4 +79,4 @@ class (RGame a m) => Game a m where
     move :: m -> a -> a
 
 default_r_move :: (Game a m, Num p) => m -> a -> Probabilities p a
-default_r_move m g = Probabilities [(fromIntegral 1, move m g)]
+default_r_move m g = Probabilities [(1, move m g)]
