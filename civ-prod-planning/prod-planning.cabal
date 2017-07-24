@@ -1,0 +1,22 @@
+name:                prod-planning
+version:             0.1.0.0
+synopsis:            Production planning for Civilization-like games
+description:         Please see README.md
+homepage:            http://github.com/axch/prod-planning#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Alexey Radul
+maintainer:          axofch@gmail.com
+copyright:           2015 Alexey Radul
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable prod-planning
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                       , containers
+                       , lens
+                       , mtl
