@@ -76,6 +76,8 @@ data Status = Status
     , base_strength :: SmallInt
     , more_strength :: SmallInt
     , combat_bonus :: SmallInt
+    , base_craft :: SmallInt
+    , more_craft :: SmallInt
     }
   deriving (Eq, Ord, Show)
 

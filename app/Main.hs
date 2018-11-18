@@ -86,7 +86,7 @@ run_talisman args = do
     forM_ [0..(read max_fate)]     (\fate -> (do
      printf "%3d %3d %4d %4d %4d" strength bonus time lives fate
      forM_ [0..(read max_more)] (\more_strength -> (do
-      let (_, value) = best_move $ Tal.Board time (Tal.Status lives fate strength more_strength bonus) Tal.SPortalOfPower
+      let (_, value) = best_move $ Tal.Board time (Tal.Status lives fate strength more_strength bonus 0 0) Tal.SPortalOfPower
       printf " %5.2f%%" $ 100 * value))
      putStrLn "")))))
 
