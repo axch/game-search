@@ -183,7 +183,7 @@ do_move Proceed (Board n s SMine) = do
   d3 <- d6
   return $ Board n s $ Mine d1 d2 d3
 do_move Proceed (Board n s (Mine d1 d2 d3))
-    | craft s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
+    | craft s >= d1 + d2 + d3 = return $ Board (n-1) s SVampire
     | craft s + 1 == d1 + d2 + d3 = return $ Board (n-1) s SMine
     | craft s + 2 == d1 + d2 + d3 = return $ Board n s SPortalOfPower -- Fencepost on counting steps
     | craft s + 3 == d1 + d2 + d3 = return $ Board n s SPortalOfPower
