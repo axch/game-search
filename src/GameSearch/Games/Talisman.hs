@@ -44,6 +44,13 @@ module GameSearch.Games.Talisman where
 -- - Detail: Monk's combat bonus depends on their bonus craft, so can change
 -- - Detail: Warrior rolls an extra die during combat, which changes
 --   win probs and usefulness of fate
+-- - Bug: Double-check whether one is allowed to use fate to make the
+--   Werewolf (or Pit Fiends) re-roll, and implement if so
+
+-- TODO
+-- - Since I know which die is best to reroll in any situation, I can
+--   reduce the number of situations that need to be considered by
+--   collapsing out die order, and only allowing one "Reroll" move.
 
 import Data.Word (Word8)
 
@@ -65,6 +72,10 @@ data Position = ValleyOfFire
               | DiceWithDeathB Die Die Die Die -- Rerolled one of Death's first
               | SCrypt
               | Crypt Die Die Die
+              | SPitFiends
+              | PitFiends Die
+              | SFightPitFiends SmallInt
+              | FightPitFiends SmallInt Die Die
               | PlainOfPeril
               | SPortalOfPower
               | PortalOfPower Die Die
@@ -116,6 +127,10 @@ available_moves :: Position -> [Move]
 available_moves SPortalOfPower = [Proceed]
 available_moves (PortalOfPower _ _) = [Proceed, Reroll 0, Reroll 1]
 available_moves PlainOfPeril = [Proceed]
+available_moves SPitFiends = [Proceed]
+available_moves (PitFiends _) = [Proceed, Reroll 0]
+available_moves (SFightPitFiends _) = [Proceed]
+available_moves (FightPitFiends _ _ _) = [Proceed, Reroll 0]
 available_moves SCrypt = [Proceed]
 available_moves (Crypt _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2]
 available_moves SDiceWithDeath = [Proceed]
@@ -148,6 +163,27 @@ do_move (Reroll 1) (Board n s (PortalOfPower d1 _)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (PortalOfPower d1 new_d))
 do_move Proceed (Board n s PlainOfPeril) = return $ Board (n-1) s SCrypt
+do_move Proceed (Board n s SPitFiends) = do
+  d1 <- d6
+  return $ Board n s (PitFiends d1)
+do_move Proceed (Board n s (PitFiends d1)) =
+    return $ Board n s (SFightPitFiends d1)
+do_move (Reroll 0) (Board n s (PitFiends _)) = do
+  new_d <- d6
+  do_move Proceed $ Board n (lose_fate 1 s) $ PitFiends new_d
+do_move Proceed (Board n s (SFightPitFiends 0)) =
+    return $ Board (n-1) s ValleyOfFire
+do_move Proceed (Board n s (SFightPitFiends count)) = do
+  d1 <- d6
+  d2 <- d6
+  return $ Board n s $ FightPitFiends count d1 d2
+do_move Proceed (Board n s (FightPitFiends count d1 d2))
+    | combat_strength s + d1 > 4 + d2  = return $ Board n s (SFightPitFiends $ count - 1)
+    | combat_strength s + d1 == 4 + d2 = return $ Board (n-1) s (SFightPitFiends count)
+    | otherwise = return $ Board (n-1) (lose_life 1 s) (SFightPitFiends count)
+do_move (Reroll 0) (Board n s (FightPitFiends count _ d2)) = do
+  new_d <- d6
+  do_move Proceed $ Board n (lose_fate 1 s) $ FightPitFiends count new_d d2
 do_move Proceed (Board n s SCrypt) = do
   d1 <- d6
   d2 <- d6
