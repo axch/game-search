@@ -36,9 +36,12 @@ module GameSearch.Games.Talisman where
 -- So far, this is a reasonable model of the Crypt-Death-Werewolf fork.
 
 -- TODO expand the model with:
--- - The craft attribute
+-- + The craft attribute
+-- + The Mine-Vampire-Pits fork
+-- - Choosing which fork to take, including after failing the
+--   crypt/mine (not that one ever wants to change one's mind about
+--   that).
 -- - Choosing whether to open the Portal with craft (as opposed to strength)
--- - The Mine-Vampire-Pits fork
 -- - Modeling the outside world, for variable results from the crypt/mine
 -- - Modeling the gnome or dwarf ability
 -- - Detail: Monk's combat bonus depends on their bonus craft, so can change
