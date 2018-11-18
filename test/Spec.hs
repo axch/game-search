@@ -1,15 +1,18 @@
 module Main where
 
+import Control.Monad.State
+import qualified Data.Map as M
 import Debug.Trace
 import System.Exit
 import Test.HUnit
 
-import GameSearch.Expectimax (best_move)
+import GameSearch.Expectimax (expectimax)
 import qualified GameSearch.Games.Talisman as Tal
 
 test_single_result :: Test
-test_single_result = test $ result @?= (Just Tal.Proceed, 0.34770549572564535) where
-    result = best_move $ Tal.Board 9 start Tal.SPortalOfPower
+test_single_result = test $ (value, M.size map) @?= (0.34770549572564535, 789593) where
+    ((_move, value), map) = runState results M.empty
+    results = expectimax $ Tal.Board 9 start Tal.SPortalOfPower
     start = Tal.Status { Tal.lives = 5
                        , Tal.fate = 3
                        , Tal.base_strength = 2
