@@ -78,6 +78,8 @@ data Position = ValleyOfFire
               | FightPitFiends SmallInt Die Die
               | SVampire
               | Vampire Die
+              | SMine
+              | Mine Die Die Die
               | PlainOfPeril
               | SPortalOfPower
               | PortalOfPower Die Die
@@ -113,6 +115,9 @@ combat_strength Status {..} = base_strength + more_strength + combat_bonus
 lose_strength :: SmallInt -> Status -> Status
 lose_strength k Status {..} = Status {more_strength = (more_strength `minus` k), ..}
 
+craft :: Status -> SmallInt
+craft Status {..} = base_craft + more_craft
+
 data Board = Board SmallInt Status Position -- The int is the amount of time left
   deriving (Eq, Ord, Show)
 
@@ -129,6 +134,8 @@ available_moves :: Position -> [Move]
 available_moves SPortalOfPower = [Proceed]
 available_moves (PortalOfPower _ _) = [Proceed, Reroll 0, Reroll 1]
 available_moves PlainOfPeril = [Proceed]
+available_moves SMine = [Proceed]
+available_moves (Mine _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2]
 available_moves SVampire = [Proceed]
 available_moves (Vampire _) = [Proceed, Reroll 0]
 available_moves SPitFiends = [Proceed]
@@ -170,6 +177,26 @@ do_move (Reroll 1) (Board n s (PortalOfPower d1 _)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (PortalOfPower d1 new_d))
 do_move Proceed (Board n s PlainOfPeril) = return $ Board (n-1) s SCrypt
+do_move Proceed (Board n s SMine) = do
+  d1 <- d6
+  d2 <- d6
+  d3 <- d6
+  return $ Board n s $ Mine d1 d2 d3
+do_move Proceed (Board n s (Mine d1 d2 d3))
+    | craft s >= d1 + d2 + d3 = return $ Board (n-1) s SDiceWithDeath
+    | craft s + 1 == d1 + d2 + d3 = return $ Board (n-1) s SMine
+    | craft s + 2 == d1 + d2 + d3 = return $ Board n s SPortalOfPower -- Fencepost on counting steps
+    | craft s + 3 == d1 + d2 + d3 = return $ Board n s SPortalOfPower
+    | otherwise = return $ Board (n-1) s SPortalOfPower -- TODO Model the outside
+do_move (Reroll 0) (Board n s (Mine _ d2 d3)) = do
+  new_d <- d6
+  do_move Proceed (Board n (lose_fate 1 s) (Mine new_d d2 d3))
+do_move (Reroll 1) (Board n s (Mine d1 _ d3)) = do
+  new_d <- d6
+  do_move Proceed (Board n (lose_fate 1 s) (Mine d1 new_d d3))
+do_move (Reroll 2) (Board n s (Mine d1 d2 _)) = do
+  new_d <- d6
+  do_move Proceed (Board n (lose_fate 1 s) (Mine d1 d2 new_d))
 do_move Proceed (Board n s SVampire) = do
   d1 <- d3
   return $ Board n s $ Vampire d1
