@@ -36,7 +36,14 @@ import GameSearch.Types
 type Caching a r = State (M.Map a r)
 
 best_move :: forall a m. (Ord a, RGame a m, Player a ~ Solitaire) => a -> (Maybe m, Double)
-best_move g_start = evalState (answer g_start) M.empty where
+best_move g_start = evalState (expectimax g_start) M.empty
+
+best_moves :: forall a m. (Ord a, RGame a m, Player a ~ Solitaire) => a -> M.Map a (Maybe m, Double)
+best_moves g_start = execState (expectimax g_start) M.empty
+
+expectimax :: forall a m. (Ord a, RGame a m, Player a ~ Solitaire)
+              => a -> Caching a (Maybe m, Double) (Maybe m, Double)
+expectimax = answer where
   go g | finished g = return (Nothing, fromJust $ payoff g Self)
        | otherwise = liftM (maximumBy (compare `on` snd)) $ mapM evaluate $ moves g
     where
