@@ -52,6 +52,8 @@ import GameSearch.Types
 type SmallInt = Word8
 type Die = SmallInt
 
+-- Positions prefixed with "S" are starting points, where one has not
+-- yet rolled any dice for the space.
 data Position = ValleyOfFire
               | SWerewolf
               | Werewolf Die Die
