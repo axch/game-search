@@ -76,6 +76,8 @@ data Position = ValleyOfFire
               | PitFiends Die
               | SFightPitFiends SmallInt
               | FightPitFiends SmallInt Die Die
+              | SVampire
+              | Vampire Die
               | PlainOfPeril
               | SPortalOfPower
               | PortalOfPower Die Die
@@ -127,6 +129,8 @@ available_moves :: Position -> [Move]
 available_moves SPortalOfPower = [Proceed]
 available_moves (PortalOfPower _ _) = [Proceed, Reroll 0, Reroll 1]
 available_moves PlainOfPeril = [Proceed]
+available_moves SVampire = [Proceed]
+available_moves (Vampire _) = [Proceed, Reroll 0]
 available_moves SPitFiends = [Proceed]
 available_moves (PitFiends _) = [Proceed, Reroll 0]
 available_moves (SFightPitFiends _) = [Proceed]
@@ -146,6 +150,9 @@ available_moves ValleyOfFire = []
 d6 :: (Fractional p) => Probabilities p SmallInt
 d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.0/6
 
+d3 :: (Fractional p) => Probabilities p SmallInt
+d3 = Probabilities [(p, 1), (p, 2), (p, 3)] where p = 1.0/3
+
 -- TODO: Define the dice lenses and rewrite all the Reroll cases to
 -- pick a lens and reroll that die.
 do_move :: (Fractional p) => Move -> Board -> Probabilities p Board
@@ -163,6 +170,14 @@ do_move (Reroll 1) (Board n s (PortalOfPower d1 _)) = do
   new_d <- d6
   do_move Proceed (Board n (lose_fate 1 s) (PortalOfPower d1 new_d))
 do_move Proceed (Board n s PlainOfPeril) = return $ Board (n-1) s SCrypt
+do_move Proceed (Board n s SVampire) = do
+  d1 <- d3
+  return $ Board n s $ Vampire d1
+do_move Proceed (Board n s (Vampire drain)) = do
+  return $ Board (n-1) (lose_life drain s) SPitFiends
+do_move (Reroll 0) (Board n s (Vampire _)) = do
+  new_d <- d3
+  do_move Proceed $ (Board n s (Vampire new_d))
 do_move Proceed (Board n s SPitFiends) = do
   d1 <- d6
   return $ Board n s (PitFiends d1)
