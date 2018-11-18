@@ -60,9 +60,21 @@ do_benchmark = do
 -- main = do_one_game
 -- main = do_benchmark
 
-main :: IO ()
-main = do
-  [max_time, max_lives, max_fate, in_strength, max_more, in_bonus] <- Sys.getArgs
+print_usage_and_exit :: IO ()
+print_usage_and_exit = do
+  putStrLn "Usage: talisman-probabilities max_time_limit max_lives max_fate base_strength max_more_strength combat_bonus"
+  putStrLn ""
+  putStrLn "Computes probabilities of reaching the Valley of Fire in the Talisman endgame"
+  putStrLn "- in time turns for time between 6 and max_time_limit"
+  putStrLn "- starting with 1 to max_lives lives"
+  putStrLn "- starting with 0 to max_fate Fate"
+  putStrLn "- with base_strength Strength from character sheet, Objects, and Followers"
+  putStrLn "- with 0 to max_more_strength additional Strength previously earned"
+  putStrLn "- with combat_bonus additional strength for combat only."
+
+run_talisman :: [String] -> IO ()
+run_talisman args = do
+  let [max_time, max_lives, max_fate, in_strength, max_more, in_bonus] = args
   let strength = read in_strength
       bonus = read in_bonus
   putStrLn $ show strength ++ " base strength, " ++ show bonus ++ " combat bonus "
@@ -77,3 +89,11 @@ main = do
       let (_, value) = best_move $ Tal.Board time (Tal.Status lives fate strength more_strength bonus) Tal.SPortalOfPower
       printf " %5.2f%%" $ 100 * value))
      putStrLn "")))))
+
+main :: IO ()
+main = do
+  args <- Sys.getArgs
+  if length args == 6 then
+      run_talisman args
+  else
+      print_usage_and_exit
