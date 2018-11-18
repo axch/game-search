@@ -1,16 +1,14 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Main where
 
 import Debug.Trace
 import System.Exit
-import Test.QuickCheck
+import Test.HUnit
 
 import GameSearch.Expectimax (best_move)
 import qualified GameSearch.Games.Talisman as Tal
 
-prop_single_result :: Bool
-prop_single_result = result == (Just Tal.Proceed, 0.3477) where
+test_single_result :: Test
+test_single_result = test $ result @?= (Just Tal.Proceed, 0.34770549572564535) where
     result = best_move $ Tal.Board 9 start Tal.SPortalOfPower
     start = Tal.Status { Tal.lives = 5
                        , Tal.fate = 3
@@ -21,12 +19,10 @@ prop_single_result = result == (Just Tal.Proceed, 0.3477) where
                        , Tal.more_craft = 0
                        }
 
-return []
-
 main :: IO ()
 main = do
-  results <- $quickCheckAll
-  if results then
+  Counts { failures = f, errors = e } <- runTestTT test_single_result
+  if f + e == 0 then
       exitWith ExitSuccess
   else
-      exitWith $ ExitFailure 1
+      exitWith $ ExitFailure $ f + e
