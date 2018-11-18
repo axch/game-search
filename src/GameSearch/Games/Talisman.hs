@@ -110,7 +110,7 @@ instance Renderable Board where
 -- which dice to reroll
 data Move = Proceed
           | Reroll SmallInt -- The index of the die to reroll
-  deriving Show
+  deriving (Eq, Show)
 
 available_moves :: Position -> [Move]
 available_moves SPortalOfPower = [Proceed]
