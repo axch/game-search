@@ -23,6 +23,7 @@ module GameSearch.Types where
 
 import Control.Monad (ap)
 import Data.Maybe (isJust)
+import Data.Traversable
 
 data Solitaire = Self deriving (Eq, Ord, Show)
 
@@ -58,6 +59,15 @@ instance Functor (Probabilities p) where
         where
           ps = map fst items
           as = map (f . snd) items
+
+instance Foldable (Probabilities p) where
+    foldMap = foldMapDefault
+
+instance Traversable (Probabilities p) where
+    traverse f (Probabilities items) = Probabilities <$> zip ps <$> as
+        where
+          ps = map fst items
+          as = traverse (f . snd) items
 
 instance (Num p) => Applicative (Probabilities p) where
     pure = return

@@ -20,12 +20,12 @@ module GameSearch.Expectimax where
 -- Exact Expectimax computations (for games whose state space is small
 -- enough for this to be feasible).
 
+import Control.Monad.State
 import Data.Function (on)
-import Data.IORef
 import Data.List (maximumBy)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
-import System.IO.Unsafe
+import Data.Traversable (mapM)
 
 import GameSearch.Types
 
@@ -33,25 +33,29 @@ import GameSearch.Types
 -- utility from this position, as well as the value thereof, assuming
 -- solitaire and exhaustive search.
 
+type Caching a r = State (M.Map a r)
+
 best_move :: forall a m. (Ord a, RGame a m, Player a ~ Solitaire) => a -> (Maybe m, Double)
-best_move = answer where
-  go g | finished g = (Nothing, fromJust $ payoff g Self)
-       | otherwise = maximumBy (compare `on` snd) $ map evaluate $ moves g
+best_move g_start = evalState (answer g_start) M.empty where
+  go g | finished g = return (Nothing, fromJust $ payoff g Self)
+       | otherwise = liftM (maximumBy (compare `on` snd)) $ mapM evaluate $ moves g
     where
-      evaluate m = (Just m, expectation $ fmap (snd . answer) results)
-          where
-            results :: Probabilities Double a
+      evaluate :: m -> Caching a (Maybe m, Double) (Maybe m, Double)
+      evaluate m = do
+        let results :: Probabilities Double a
             results = r_move m g
+        subanswers <- mapM (liftM snd . answer) results
+        return (Just m, expectation subanswers)
+
+  answer :: a -> Caching a (Maybe m, Double) (Maybe m, Double)
   answer = memoize go
 
-memoize :: (Ord a) => (a -> r) -> a -> r
-memoize f = unsafePerformIO (do
-  cacheRef <- newIORef M.empty
-  return $ \x -> unsafePerformIO (do
-                   cache <- readIORef cacheRef
-                   case M.lookup x cache of
-                     (Just v) -> return v
-                     Nothing -> do
-                       let v = f x
-                       modifyIORef' cacheRef (M.insert x v)
-                       return v))
+memoize :: (Ord a) => (a -> Caching a r r) -> a -> Caching a r r
+memoize f x = do
+  cache <- get
+  case M.lookup x cache of
+    (Just v) -> return v
+    Nothing -> do
+                v <- f x
+                modify (M.insert x v)
+                return v
