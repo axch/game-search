@@ -39,7 +39,7 @@ print_block strength craft bonus time lives fates more_strengths more_crafts = d
    forM_ more_strengths (\more_strength -> (do
     forM_ more_crafts (\more_craft -> (do
      let status = Tal.Status lives fate strength more_strength bonus craft more_craft
-     (_, value) <- mapStateT (return . runIdentity) $ Exp.expectimax $ Tal.Board time status Tal.SPortalOfPower
+     (_, value) <- mapStateT (return . runIdentity) $ Exp.expectimax $ Tal.Board time Tal.Strength status Tal.SPortalOfPower
      lift $ printf " %5.2f%%" $ 100 * value))))
    lift $ putStrLn ""))
 

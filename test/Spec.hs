@@ -12,7 +12,7 @@ import qualified GameSearch.Games.Talisman as Tal
 test_single_result :: Test
 test_single_result = test $ (value, M.size map) @?= (0.34770549572564535, 789593) where
     ((_move, value), map) = runState results M.empty
-    results = expectimax $ Tal.Board 9 start Tal.SPortalOfPower
+    results = expectimax $ Tal.Board 9 Tal.Strength start Tal.SPortalOfPower
     start = Tal.Status { Tal.lives = 5
                        , Tal.fate = 3
                        , Tal.base_strength = 2
