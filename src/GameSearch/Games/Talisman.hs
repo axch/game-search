@@ -123,6 +123,9 @@ lose_strength k Status {..} = Status {more_strength = (more_strength `minus` k),
 craft :: Status -> SmallInt
 craft Status {..} = base_craft + more_craft
 
+lose_craft :: SmallInt -> Status -> Status
+lose_craft k Status {..} = Status {more_craft = (more_craft `minus` k), ..}
+
 data Board = Board SmallInt Status Position -- The int is the amount of time left
   deriving (Eq, Ord, Show)
 
