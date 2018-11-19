@@ -1,6 +1,10 @@
 module Main where
 
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.State
 import Data.Foldable (forM_)
+import Data.Functor.Identity (runIdentity)
+import qualified Data.Map as M
 import qualified System.Environment as Sys
 import Text.Printf
 
@@ -21,20 +25,23 @@ print_usage_and_exit = do
   putStrLn "- with base_craft Craft from character sheet, Objects, and Followers"
   putStrLn "- with 0 to max_more_craft additional Craft previously earned."
 
-print_block :: Tal.SmallInt -> Tal.SmallInt -> Tal.SmallInt -> Tal.SmallInt -> Tal.SmallInt -> [Tal.SmallInt] -> [Tal.SmallInt] -> [Tal.SmallInt] -> IO ()
+type Strategy = M.Map Tal.Board (Maybe Tal.Move, Double)
+type Strategic a = StateT Strategy IO a
+
+print_block :: Tal.SmallInt -> Tal.SmallInt -> Tal.SmallInt -> Tal.SmallInt -> Tal.SmallInt -> [Tal.SmallInt] -> [Tal.SmallInt] -> [Tal.SmallInt] -> Strategic ()
 print_block strength craft bonus time lives fates more_strengths more_crafts = do
-  putStr "str cft bon time life fate"
+  lift $ putStr "str cft bon time life fate"
   forM_ more_strengths (\more_strength -> (do
-   forM_ more_crafts (\more_craft -> printf "  +%1d/+%1d" more_strength more_craft)))
-  putStrLn ""
+   forM_ more_crafts (\more_craft -> lift $ printf "  +%1d/+%1d" more_strength more_craft)))
+  lift $ putStrLn ""
   forM_ fates (\fate -> (do
-   printf "%3d %3d %3d %4d %4d %4d" strength craft bonus time lives fate
+   lift $ printf "%3d %3d %3d %4d %4d %4d" strength craft bonus time lives fate
    forM_ more_strengths (\more_strength -> (do
     forM_ more_crafts (\more_craft -> (do
      let status = Tal.Status lives fate strength more_strength bonus craft more_craft
-     let (_, value) = Exp.best_move $ Tal.Board time status Tal.SPortalOfPower
-     printf " %5.2f%%" $ 100 * value))))
-   putStrLn ""))
+     (_, value) <- mapStateT (return . runIdentity) $ Exp.expectimax $ Tal.Board time status Tal.SPortalOfPower
+     lift $ printf " %5.2f%%" $ 100 * value))))
+   lift $ putStrLn ""))
 
 run :: [String] -> IO ()
 run args = do
@@ -43,9 +50,11 @@ run args = do
       craft = read in_craft
       bonus = read in_bonus
   putStrLn $ show strength ++ " base strength, " ++ show craft ++ " base craft, " ++ show bonus ++ " combat bonus "
-  forM_ [6..(read max_time)]     (\time ->
-   forM_ [1..(read max_lives)]    (\lives ->
-    print_block strength craft bonus time lives [0..(read max_fate)] [0..(read max_more_str)] [0..(read max_more_cft)]))
+  evalStateT (
+   forM_ [6..(read max_time)] (\time ->
+    forM_ [1..(read max_lives)] (\lives ->
+     print_block strength craft bonus time lives [0..(read max_fate)] [0..(read max_more_str)] [0..(read max_more_cft)])))
+   M.empty
 
 main :: IO ()
 main = do
