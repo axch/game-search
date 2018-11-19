@@ -54,8 +54,11 @@ module GameSearch.Games.Talisman where
 -- - Since I know which die is best to reroll in any situation, I can
 --   reduce the number of situations that need to be considered by
 --   collapsing out die order, and only allowing one "Reroll" move.
--- - I can reuse the move cache across multiple top-level position
+-- - Strictifying things should help
+-- + I can reuse the move cache across multiple top-level position
 --   evaluations in the main driver.
+-- - However, keeping the move cache around can lead to avoidable OOM
+--   on large parameter sweeps.
 
 import Data.Word (Word8)
 
