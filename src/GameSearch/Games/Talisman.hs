@@ -50,10 +50,12 @@ module GameSearch.Games.Talisman where
 -- - Bug: Double-check whether one is allowed to use fate to make the
 --   Werewolf (or Pit Fiends) re-roll, and implement if so
 
--- TODO
+-- TODO (performance)
 -- - Since I know which die is best to reroll in any situation, I can
 --   reduce the number of situations that need to be considered by
 --   collapsing out die order, and only allowing one "Reroll" move.
+-- - I can reuse the move cache across multiple top-level position
+--   evaluations in the main driver.
 
 import Data.Word (Word8)
 
