@@ -33,11 +33,15 @@ module GameSearch.Games.Talisman where
 -- c) Choosing when to attempt it is a significant decision in one's
 --    play of the overall game.
 
--- So far, this is a reasonable model of the Crypt-Death-Werewolf fork.
+-- So far, this is a reasonable model of the Crypt-Death-Werewolf fork,
+-- with dead (but activatable) code for the Mine-Vampire-Pits fork.
 
 -- TODO expand the model with:
 -- + The craft attribute
 -- + The Mine-Vampire-Pits fork
+-- - Run-time control of whether one is studying the craft path,
+--   strength path, or full game.  This can be implemented as a field of
+--   Board.
 -- - Choosing which fork to take, including after failing the
 --   crypt/mine (not that one ever wants to change one's mind about
 --   that).
@@ -54,11 +58,36 @@ module GameSearch.Games.Talisman where
 -- - Since I know which die is best to reroll in any situation, I can
 --   reduce the number of situations that need to be considered by
 --   collapsing out die order, and only allowing one "Reroll" move.
+--   - Dice with Death moves from 3 * 6^4 = 3888 states
+--     to 21 * 21 + 2 * 11 * 21 = 903 states
+--   - Crypt/Mine 6^3 to 36 each
+--   - FightWerewolf 11 * 36 to 16 * 6 (unless can reroll both dice)
+--   - FightPitFiends 6^3 to 6^3
+--   - Ergo, this should be worth a 3x reduction in the search space
 -- - Strictifying things should help
 -- + I can reuse the move cache across multiple top-level position
 --   evaluations in the main driver.
 -- - However, keeping the move cache around can lead to avoidable OOM
 --   on large parameter sweeps.
+-- - After the character passes the Crypt or the Mine, we can (a)
+--   forget their Craft attributes completely, and (b) fold their
+--   more_strength and combat_bonus into their base_strength, because
+--   those distinctions no longer matter.  This should drastically
+--   speed up high-time high-more_foo runs, because all the heavy
+--   board positions are after the Crypt and the Mine.
+-- - We can abort early when we know the character doesn't have enough
+--   time.  0 turns at the ValleyOfFire lose, so 1 turn at PitFiends
+--   or Werewolf lose, so 2 turns at Vampire or DiceWithDeath lose, so
+--   3 turns at Crypt or Mine lose, so 4 turns at PlainOfPeril lose,
+--   so 5 turns at PortalOfPower lose.  For a total run of 13 turns,
+--   DiceWithDeath (which is the heavy one) sees a 20% reduction in
+--   viable game states.
+-- - We can fast-path the 0 fate case by auto-Proceeding on all the
+--   non-S nodes, thus avoiding materializing them at all.  (It's
+--   important not to auto-Proceed the S nodes, so that the
+--   probabilities all re-collapse.)  For a 4-fate run, this could
+--   save ~20% of states, and might be useful as a fast auto-solve
+--   for an MCTS-based variant.
 
 import Data.Word (Word8)
 
