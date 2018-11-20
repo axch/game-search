@@ -210,16 +210,20 @@ do_move Proceed (Board n f s SPortalOfPower) = do
   d1 <- d6
   d2 <- d6
   return $ Board n f s $ PortalOfPower d1 d2
-do_move Proceed (Board n f s (PortalOfPower d1 d2))
+do_move Proceed (Board n f@Strength s (PortalOfPower d1 d2))
     | strength s >= d1 + d2 = return $ Board (n-1) f s PlainOfPeril
     | otherwise = return $ Board (n-1) f (lose_strength 1 s) SPortalOfPower
+do_move Proceed (Board n f@Craft s (PortalOfPower d1 d2))
+    | craft s >= d1 + d2 = return $ Board (n-1) f s PlainOfPeril
+    | otherwise = return $ Board (n-1) f (lose_craft 1 s) SPortalOfPower
 do_move (Reroll 0) (Board n f s (PortalOfPower _ d2)) = do
   new_d <- d6
   do_move Proceed (Board n f (lose_fate 1 s) (PortalOfPower new_d d2))
 do_move (Reroll 1) (Board n f s (PortalOfPower d1 _)) = do
   new_d <- d6
   do_move Proceed (Board n f (lose_fate 1 s) (PortalOfPower d1 new_d))
-do_move Proceed (Board n f s PlainOfPeril) = return $ Board (n-1) f s SCrypt
+do_move Proceed (Board n f@Strength s PlainOfPeril) = return $ Board (n-1) f s SCrypt
+do_move Proceed (Board n f@Craft s PlainOfPeril) = return $ Board (n-1) f s SMine
 do_move Proceed (Board n f s SMine) = do
   d1 <- d6
   d2 <- d6
