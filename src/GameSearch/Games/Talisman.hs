@@ -108,7 +108,7 @@ data Position = ValleyOfFire
               | DiceWithDeathA Die Die Die Die -- Rerolled one of mine first
               | DiceWithDeathB Die Die Die Die -- Rerolled one of Death's first
               | SCrypt
-              | Crypt Die Die Die
+              | Crypt Die SmallInt
               | SPitFiends
               | PitFiends Die
               | SFightPitFiends SmallInt
@@ -186,7 +186,7 @@ available_moves (PitFiends _) = [Proceed, Reroll 0]
 available_moves (SFightPitFiends _) = [Proceed]
 available_moves (FightPitFiends _ _ _) = [Proceed, Reroll 0]
 available_moves SCrypt = [Proceed]
-available_moves (Crypt _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2]
+available_moves (Crypt _ _) = [Proceed, Reroll 0]
 available_moves SDiceWithDeath = [Proceed]
 available_moves (DiceWithDeath _ _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2, Reroll 3]
 available_moves (DiceWithDeathA _ _ _ _) = [Proceed, Reroll 0, Reroll 1]
@@ -278,22 +278,16 @@ do_move Proceed (Board n f s SCrypt) = do
   d1 <- d6
   d2 <- d6
   d3 <- d6
-  return $ Board n f s $ Crypt d1 d2 d3
-do_move Proceed (Board n f s (Crypt d1 d2 d3))
-    | strength s >= d1 + d2 + d3 = return $ Board (n-1) f s SDiceWithDeath
-    | strength s + 1 == d1 + d2 + d3 = return $ Board (n-1) f s SCrypt
-    | strength s + 2 == d1 + d2 + d3 = return $ Board n f s SPortalOfPower -- Fencepost on counting steps
-    | strength s + 3 == d1 + d2 + d3 = return $ Board n f s SPortalOfPower
+  return $ Board n f s $ three_dice Crypt d1 d2 d3
+do_move Proceed (Board n f s (Crypt d1 d2_d3))
+    | strength s >= d1 + d2_d3 = return $ Board (n-1) f s SDiceWithDeath
+    | strength s + 1 == d1 + d2_d3 = return $ Board (n-1) f s SCrypt
+    | strength s + 2 == d1 + d2_d3 = return $ Board n f s SPortalOfPower -- Fencepost on counting steps
+    | strength s + 3 == d1 + d2_d3 = return $ Board n f s SPortalOfPower
     | otherwise = return $ Board (n-1) f s SPortalOfPower -- TODO Model the outside
-do_move (Reroll 0) (Board n f s (Crypt _ d2 d3)) = do
-  new_d <- d6
-  do_move Proceed (Board n f (lose_fate 1 s) (Crypt new_d d2 d3))
-do_move (Reroll 1) (Board n f s (Crypt d1 _ d3)) = do
-  new_d <- d6
-  do_move Proceed (Board n f (lose_fate 1 s) (Crypt d1 new_d d3))
-do_move (Reroll 2) (Board n f s (Crypt d1 d2 _)) = do
-  new_d <- d6
-  do_move Proceed (Board n f (lose_fate 1 s) (Crypt d1 d2 new_d))
+do_move (Reroll 0) (Board n f s (Crypt _ d2_d3)) = do
+  new_d <- d6  -- May no longer be the maximum, but doesn't matter
+  do_move Proceed (Board n f (lose_fate 1 s) (Crypt new_d d2_d3))
 do_move Proceed (Board n f s SDiceWithDeath) = do
   d1 <- d6
   d2 <- d6
