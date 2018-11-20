@@ -89,6 +89,21 @@ module GameSearch.Games.Talisman where
 --   probabilities all re-collapse.)  For a 4-fate run, this could
 --   save ~20% of states, and might be useful as a fast auto-solve
 --   for an MCTS-based variant.
+--   - The game-independent version of this is "don't cache positions
+--     where neither the player nor chance make any choices before the
+--     next position you would cache".  This would be useful when the
+--     obligatory move(s) are irreversible, by reducing the number of
+--     positions that need caching, and hence the memory footprint.
+--   - To gain a speed benefit from this insight, should auto-add
+--     intermediate rolling results, and insert Probabilities
+--     reductions.  That way, instead of exploring all 6^4 possible
+--     roll sets for DiceWithDeath, could explore just 11^2; or maybe
+--     even pre-compute the difference distribution and explore only
+--     the 3 outcomes.  The value of this obviously depends on how
+--     many times SDiceWithDeath is expanded.
+--   - Possible implementation: Fork the whole game into "has Fate"
+--     and "does not have Fate" branches, and code them essentially
+--     separately.
 
 import Data.Word (Word8)
 
