@@ -192,7 +192,7 @@ available_moves (DiceWithDeath _ _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2
 available_moves (DiceWithDeathA _ _ _ _) = [Proceed, Reroll 0, Reroll 1]
 available_moves (DiceWithDeathB _ _ _ _) = [Proceed, Reroll 0, Reroll 1]
 available_moves SWerewolf = [Proceed]
-available_moves (Werewolf _ _) = [Proceed, Reroll 0, Reroll 1]
+available_moves (Werewolf _ _) = [Proceed, Reroll 0]
 available_moves (SFightWerewolf _) = [Proceed]
 available_moves (FightWerewolf _ _ _) = [Proceed, Reroll 0]
 available_moves ValleyOfFire = []
@@ -329,15 +329,12 @@ do_move (Reroll 1) (Board n f s (DiceWithDeathB d1 _ d3 d4)) = do
 do_move Proceed (Board n f s SWerewolf) = do
   d1 <- d6
   d2 <- d6
-  return $ Board n f s $ Werewolf d1 d2
+  return $ Board n f s $ two_dice Werewolf d1 d2
 do_move Proceed (Board n f s (Werewolf d1 d2)) =
     return $ Board n f s $ SFightWerewolf $ d1 + d2
 do_move (Reroll 0) (Board n f s (Werewolf _ d2)) = do
   new_d <- d6
   do_move Proceed $ Board n f (lose_fate 1 s) $ Werewolf new_d d2
-do_move (Reroll 1) (Board n f s (Werewolf d1 _)) = do
-  new_d <- d6
-  do_move Proceed $ Board n f (lose_fate 1 s) $ Werewolf d1 new_d
 do_move Proceed (Board n f s (SFightWerewolf str)) = do
   d1 <- d6
   d2 <- d6
