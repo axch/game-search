@@ -10,7 +10,7 @@ import GameSearch.Expectimax (expectimax)
 import qualified GameSearch.Games.Talisman as Tal
 
 test_single_result_1 :: Test
-test_single_result_1 = test $ (value, M.size map) @?= (0.34770549572564535, 789593) where
+test_single_result_1 = test $ (value, M.size map) @?= (0.34770549572564535, 237953) where
     ((_move, value), map) = runState results M.empty
     results = expectimax $ Tal.Board 9 Tal.Strength start Tal.SPortalOfPower
     start = Tal.Status { Tal.lives = 5
@@ -23,7 +23,7 @@ test_single_result_1 = test $ (value, M.size map) @?= (0.34770549572564535, 7895
                        }
 
 test_single_result_2 :: Test
-test_single_result_2 = test $ (value, M.size map) @?= (0.4590041950276001, 79157) where
+test_single_result_2 = test $ (value, M.size map) @?= (0.4590041950276001, 58502) where
     ((_move, value), map) = runState results M.empty
     results = expectimax $ Tal.Board 9 Tal.Craft start Tal.SPortalOfPower
     start = Tal.Status { Tal.lives = 5

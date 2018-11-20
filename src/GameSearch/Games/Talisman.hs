@@ -55,7 +55,7 @@ module GameSearch.Games.Talisman where
 --   Werewolf (or Pit Fiends) re-roll, and implement if so
 
 -- TODO (performance)
--- - Since I know which die is best to reroll in any situation, I can
+-- + Since I know which die is best to reroll in any situation, I can
 --   reduce the number of situations that need to be considered by
 --   collapsing out die order, and only allowing one "Reroll" move.
 --   - Dice with Death moves from 3 * 6^4 = 3888 states
@@ -80,8 +80,8 @@ module GameSearch.Games.Talisman where
 --   or Werewolf lose, so 2 turns at Vampire or DiceWithDeath lose, so
 --   3 turns at Crypt or Mine lose, so 4 turns at PlainOfPeril lose,
 --   so 5 turns at PortalOfPower lose.  For a total run of 13 turns,
---   DiceWithDeath (which is the heavy one) sees a 20% reduction in
---   viable game states.
+--   DiceWithDeath (which is the heavy one before stat collapse) sees
+--   a 20% reduction in viable game states.
 -- - We can fast-path the 0 fate case by auto-Proceeding on all the
 --   non-S nodes, thus avoiding materializing them at all.  (It's
 --   important not to auto-Proceed the S nodes, so that the
@@ -105,8 +105,8 @@ data Position = ValleyOfFire
               | FightWerewolf SmallInt Die Die
               | SDiceWithDeath
               | DiceWithDeath Die Die Die Die
-              | DiceWithDeathA Die Die Die Die -- Rerolled one of mine first
-              | DiceWithDeathB Die Die Die Die -- Rerolled one of Death's first
+              | DiceWithDeathA SmallInt Die Die -- Rerolled one of mine first
+              | DiceWithDeathB Die Die SmallInt -- Rerolled one of Death's first
               | SCrypt
               | Crypt Die SmallInt
               | SPitFiends
@@ -188,9 +188,9 @@ available_moves (FightPitFiends _ _ _) = [Proceed, Reroll 0]
 available_moves SCrypt = [Proceed]
 available_moves (Crypt _ _) = [Proceed, Reroll 0]
 available_moves SDiceWithDeath = [Proceed]
-available_moves (DiceWithDeath _ _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2, Reroll 3]
-available_moves (DiceWithDeathA _ _ _ _) = [Proceed, Reroll 0, Reroll 1]
-available_moves (DiceWithDeathB _ _ _ _) = [Proceed, Reroll 0, Reroll 1]
+available_moves (DiceWithDeath _ _ _ _) = [Proceed, Reroll 0, Reroll 1]
+available_moves (DiceWithDeathA _ _ _) = [Proceed, Reroll 0]
+available_moves (DiceWithDeathB _ _ _) = [Proceed, Reroll 0]
 available_moves SWerewolf = [Proceed]
 available_moves (Werewolf _ _) = [Proceed, Reroll 0]
 available_moves (SFightWerewolf _) = [Proceed]
@@ -293,39 +293,27 @@ do_move Proceed (Board n f s SDiceWithDeath) = do
   d2 <- d6
   d3 <- d6
   d4 <- d6
-  return $ Board n f s $ DiceWithDeath d1 d2 d3 d4
+  return $ Board n f s $ two_dice (two_dice DiceWithDeath d1 d2) d3 d4
 do_move Proceed (Board n f s (DiceWithDeath d1 d2 d3 d4))
     | d1 + d2 >  d3 + d4 = return $ Board (n-1) f s SWerewolf
     | d1 + d2 == d3 + d4 = return $ Board (n-1) f s SDiceWithDeath
     | otherwise = return $ Board (n-1) f (lose_life 1 s) SDiceWithDeath
-do_move (Reroll 0) (Board n f s (DiceWithDeath _ d2 d3 d4)) = do
+do_move (Reroll 0) (Board n f s (DiceWithDeath d1 _ d3 d4)) = do
   new_d <- d6
-  return $ Board n f (lose_fate 1 s) $ DiceWithDeathA new_d d2 d3 d4
-do_move (Reroll 1) (Board n f s (DiceWithDeath d1 _ d3 d4)) = do
+  return $ Board n f (lose_fate 1 s) $ two_dice (DiceWithDeathA $ d1 + new_d) d3 d4
+do_move (Reroll 1) (Board n f s (DiceWithDeath d1 d2 _ d4)) = do
   new_d <- d6
-  return $ Board n f (lose_fate 1 s) $ DiceWithDeathA d1 new_d d3 d4
-do_move (Reroll 2) (Board n f s (DiceWithDeath d1 d2 _ d4)) = do
+  return $ Board n f (lose_fate 1 s) $ (two_dice DiceWithDeathB d1 d2) $ new_d + d4
+do_move Proceed (Board n f s (DiceWithDeathA me d3 d4)) =
+    do_move Proceed $ Board n f s $ DiceWithDeath me 0 d3 d4
+do_move (Reroll 0) (Board n f s (DiceWithDeathA me _ d4)) = do
   new_d <- d6
-  return $ Board n f (lose_fate 1 s) $ DiceWithDeathB d1 d2 new_d d4
-do_move (Reroll 3) (Board n f s (DiceWithDeath d1 d2 d3 _)) = do
+  do_move Proceed $ Board n f (lose_fate 1 s) $ DiceWithDeath me 0 new_d d4
+do_move Proceed (Board n f s (DiceWithDeathB d1 d2 death)) =
+    do_move Proceed $ Board n f s $ DiceWithDeath d1 d2 death 0
+do_move (Reroll 0) (Board n f s (DiceWithDeathB d1 _ death)) = do
   new_d <- d6
-  return $ Board n f (lose_fate 1 s) $ DiceWithDeathB d1 d2 d3 new_d
-do_move Proceed (Board n f s (DiceWithDeathA d1 d2 d3 d4)) =
-    do_move Proceed $ Board n f s $ DiceWithDeath d1 d2 d3 d4
-do_move (Reroll 0) (Board n f s (DiceWithDeathA d1 d2 _ d4)) = do
-  new_d <- d6
-  do_move Proceed $ Board n f (lose_fate 1 s) $ DiceWithDeath d1 d2 new_d d4
-do_move (Reroll 1) (Board n f s (DiceWithDeathA d1 d2 d3 _)) = do
-  new_d <- d6
-  do_move Proceed $ Board n f (lose_fate 1 s) $ DiceWithDeath d1 d2 d3 new_d
-do_move Proceed (Board n f s (DiceWithDeathB d1 d2 d3 d4)) =
-    do_move Proceed $ Board n f s $ DiceWithDeath d1 d2 d3 d4
-do_move (Reroll 0) (Board n f s (DiceWithDeathB _ d2 d3 d4)) = do
-  new_d <- d6
-  do_move Proceed $ Board n f (lose_fate 1 s) $ DiceWithDeath new_d d2 d3 d4
-do_move (Reroll 1) (Board n f s (DiceWithDeathB d1 _ d3 d4)) = do
-  new_d <- d6
-  do_move Proceed $ Board n f (lose_fate 1 s) $ DiceWithDeath d1 new_d d3 d4
+  do_move Proceed $ Board n f (lose_fate 1 s) $ DiceWithDeath d1 new_d death 0
 do_move Proceed (Board n f s SWerewolf) = do
   d1 <- d6
   d2 <- d6
