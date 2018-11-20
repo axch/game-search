@@ -39,7 +39,7 @@ module GameSearch.Games.Talisman where
 -- TODO expand the model with:
 -- + The craft attribute
 -- + The Mine-Vampire-Pits fork
--- - Run-time control of whether one is studying the craft path,
+-- + Run-time control of whether one is studying the craft path,
 --   strength path, or full game.  This can be implemented as a field of
 --   Board.
 -- - Choosing which fork to take, including after failing the
@@ -175,7 +175,7 @@ data Move = Proceed
 
 available_moves :: Position -> [Move]
 available_moves SPortalOfPower = [Proceed]
-available_moves (PortalOfPower _ _) = [Proceed, Reroll 0, Reroll 1]
+available_moves (PortalOfPower _ _) = [Proceed, Reroll 0]
 available_moves PlainOfPeril = [Proceed]
 available_moves SMine = [Proceed]
 available_moves (Mine _ _ _) = [Proceed, Reroll 0, Reroll 1, Reroll 2]
@@ -203,13 +203,23 @@ d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.
 d3 :: (Fractional p) => Probabilities p SmallInt
 d3 = Probabilities [(p, 1), (p, 2), (p, 3)] where p = 1.0/3
 
--- TODO: Define the dice lenses and rewrite all the Reroll cases to
--- pick a lens and reroll that die.
+-- Helper implementing symmetry collapse for situations where two dice
+-- were rolled.
+two_dice :: (Die -> Die -> a) -> Die -> Die -> a
+two_dice f d_1 d_2 = f (d_1 `max` d_2) (d_1 `min` d_2)
+
+-- Helper implementing symmetry collapse for situations where three dice
+-- were rolled and we know one would always want to reroll the highest,
+-- and the only thing that matters about the others is the sum.
+three_dice :: (Die -> SmallInt -> a) -> Die -> Die -> Die -> a
+three_dice f d_1 d_2 d_3 = f (maximum dice) (sum dice - maximum dice) where
+    dice = [d_1, d_2, d_3]
+
 do_move :: (Fractional p) => Move -> Board -> Probabilities p Board
 do_move Proceed (Board n f s SPortalOfPower) = do
   d1 <- d6
   d2 <- d6
-  return $ Board n f s $ PortalOfPower d1 d2
+  return $ Board n f s $ two_dice PortalOfPower d1 d2
 do_move Proceed (Board n f@Strength s (PortalOfPower d1 d2))
     | strength s >= d1 + d2 = return $ Board (n-1) f s PlainOfPeril
     | otherwise = return $ Board (n-1) f (lose_strength 1 s) SPortalOfPower
@@ -218,10 +228,7 @@ do_move Proceed (Board n f@Craft s (PortalOfPower d1 d2))
     | otherwise = return $ Board (n-1) f (lose_craft 1 s) SPortalOfPower
 do_move (Reroll 0) (Board n f s (PortalOfPower _ d2)) = do
   new_d <- d6
-  do_move Proceed (Board n f (lose_fate 1 s) (PortalOfPower new_d d2))
-do_move (Reroll 1) (Board n f s (PortalOfPower d1 _)) = do
-  new_d <- d6
-  do_move Proceed (Board n f (lose_fate 1 s) (PortalOfPower d1 new_d))
+  do_move Proceed (Board n f (lose_fate 1 s) (two_dice PortalOfPower new_d d2))
 do_move Proceed (Board n f@Strength s PlainOfPeril) = return $ Board (n-1) f s SCrypt
 do_move Proceed (Board n f@Craft s PlainOfPeril) = return $ Board (n-1) f s SMine
 do_move Proceed (Board n f s SMine) = do
