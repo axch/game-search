@@ -73,9 +73,10 @@ module GameSearch.Games.Talisman where
 --   forget their Craft attributes completely, and (b) fold their
 --   more_strength and combat_bonus into their base_strength, because
 --   those distinctions no longer matter.  This should drastically
---   speed up high-time high-more_foo runs, because all the heavy
---   board positions are after the Crypt and the Mine.
--- - We can abort early when we know the character doesn't have enough
+--   speed up high-time high-more_craft runs, as well as parameter
+--   sweeps that vary base attributes, because all the heavy board
+--   positions are after the Crypt and the Mine.
+-- + We can abort early when we know the character doesn't have enough
 --   time.  0 turns at the ValleyOfFire lose, so 1 turn at PitFiends
 --   or Werewolf lose, so 2 turns at Vampire or DiceWithDeath lose, so
 --   3 turns at Crypt or Mine lose, so 4 turns at PlainOfPeril lose,
@@ -343,6 +344,14 @@ instance RGame Board Move where
     r_move = do_move
     valid _ = const True -- TODO: Actually validate the moves
     payoff (Board 0 _ _ _) Self = Just 0
+    payoff (Board 1 _ _ SWerewolf) Self = Just 0
+    payoff (Board 1 _ _ SPitFiends) Self = Just 0
+    payoff (Board time _ _ SDiceWithDeath) Self | time <= 2 = Just 0
+    payoff (Board time _ _ SVampire) Self | time <= 2 = Just 0
+    payoff (Board time _ _ SCrypt) Self | time <= 3 = Just 0
+    payoff (Board time _ _ SMine) Self | time <= 3 = Just 0
+    payoff (Board time _ _ PlainOfPeril) Self | time <= 4 = Just 0
+    payoff (Board time _ _ SPortalOfPower) Self | time <= 5 = Just 0
     payoff (Board _ _ Status{lives=0} _) Self = Just 0
     payoff (Board _ _ _ ValleyOfFire) Self = Just 1
     payoff _ Self = Nothing
