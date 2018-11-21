@@ -250,19 +250,23 @@ do_move Proceed (Board n f@Craft s (PortalOfPower d1 d2))
 do_move (Reroll 0) (Board n f s (PortalOfPower _ d2)) = do
   new_d <- d6
   do_move Proceed (Board n f (lose_fate 1 s) (two_dice PortalOfPower new_d d2))
-do_move Proceed (Board n f@Strength s PlainOfPeril) = return $ Board (n-1) f s SCrypt
-do_move Proceed (Board n f@Craft s PlainOfPeril) = return $ Board (n-1) f s SMine
+-- Hack timing: entry to Mine/Crypt doesn't cost a turn, but exit
+-- does.  Why? To make sure that the time-major ordering on games
+-- decreases with every move.
+do_move Proceed (Board n f@Strength s PlainOfPeril) = return $ Board n f s SCrypt
+do_move Proceed (Board n f@Craft s PlainOfPeril) = return $ Board n f s SMine
 do_move Proceed (Board n f s SMine) = do
   d1 <- d6
   d2 <- d6
   d3 <- d6
   return $ Board n f s $ three_dice Mine d1 d2 d3
 do_move Proceed (Board n f s (Mine d1 d2_d3))
-    | craft s >= d1 + d2_d3 = return $ Board (n-1) f s SVampire
+    -- Timing hack: Entering the Mine doesn't cost a turn, but exiting does.
+    | craft s >= d1 + d2_d3 = return $ Board (n `minus` 2) f s SVampire
     | craft s + 1 == d1 + d2_d3 = return $ Board (n-1) f s SMine
-    | craft s + 2 == d1 + d2_d3 = return $ Board n f s SPortalOfPower -- Fencepost on counting steps
-    | craft s + 3 == d1 + d2_d3 = return $ Board n f s SPortalOfPower
-    | otherwise = return $ Board (n-1) f s SPortalOfPower -- TODO Model the outside
+    | craft s + 2 == d1 + d2_d3 = return $ Board (n-1) f s SPortalOfPower
+    | craft s + 3 == d1 + d2_d3 = return $ Board (n-1) f s SPortalOfPower
+    | otherwise = return $ Board (n `minus` 2) f s SPortalOfPower -- TODO Model the outside
 do_move (Reroll 0) (Board n f s (Mine _ d2_d3)) = do
   new_d <- d6  -- May no longer be the maximum, but doesn't matter
   do_move Proceed (Board n f (lose_fate 1 s) (Mine new_d d2_d3))
@@ -301,11 +305,12 @@ do_move Proceed (Board n f s SCrypt) = do
   d3 <- d6
   return $ Board n f s $ three_dice Crypt d1 d2 d3
 do_move Proceed (Board n f s (Crypt d1 d2_d3))
-    | strength s >= d1 + d2_d3 = return $ Board (n-1) f s SDiceWithDeath
+    -- Timing hack: Entering the Crypt doesn't cost a turn, but exiting does.
+    | strength s >= d1 + d2_d3 = return $ Board (n `minus` 2) f s SDiceWithDeath
     | strength s + 1 == d1 + d2_d3 = return $ Board (n-1) f s SCrypt
-    | strength s + 2 == d1 + d2_d3 = return $ Board n f s SPortalOfPower -- Fencepost on counting steps
-    | strength s + 3 == d1 + d2_d3 = return $ Board n f s SPortalOfPower
-    | otherwise = return $ Board (n-1) f s SPortalOfPower -- TODO Model the outside
+    | strength s + 2 == d1 + d2_d3 = return $ Board (n-1) f s SPortalOfPower
+    | strength s + 3 == d1 + d2_d3 = return $ Board (n-1) f s SPortalOfPower
+    | otherwise = return $ Board (n `minus` 2) f s SPortalOfPower -- TODO Model the outside
 do_move (Reroll 0) (Board n f s (Crypt _ d2_d3)) = do
   new_d <- d6  -- May no longer be the maximum, but doesn't matter
   do_move Proceed (Board n f (lose_fate 1 s) (Crypt new_d d2_d3))
@@ -369,8 +374,9 @@ instance RGame Board Move where
     payoff (Board 1 _ _ SPitFiends) Self = Just 0
     payoff (Board time _ _ SDiceWithDeath) Self | time <= 2 = Just 0
     payoff (Board time _ _ SVampire) Self | time <= 2 = Just 0
-    payoff (Board time _ _ SCrypt) Self | time <= 3 = Just 0
-    payoff (Board time _ _ SMine) Self | time <= 3 = Just 0
+    -- Hack timing: entry to Mine/Crypt doesn't cost a turn, but exit does.
+    payoff (Board time _ _ SCrypt) Self | time <= 4 = Just 0
+    payoff (Board time _ _ SMine) Self | time <= 4 = Just 0
     payoff (Board time _ _ PlainOfPeril) Self | time <= 4 = Just 0
     payoff (Board time _ _ SPortalOfPower) Self | time <= 5 = Just 0
     payoff (Board _ _ Status{lives=0} _) Self = Just 0
