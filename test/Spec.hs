@@ -1,13 +1,19 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
 import Control.Monad.State
+import Data.Foldable (toList)
 import qualified Data.Map as M
 import Debug.Trace
 import System.Exit
 import Test.HUnit
+import Test.QuickCheck
 
 import GameSearch.Expectimax (expectimax)
+import GameSearch.Types (r_move, moves)
 import qualified GameSearch.Games.Talisman as Tal
+import TalismanTest
 
 test_single_result_1 :: Test
 test_single_result_1 = test $ (value, M.size map) @?= (0.34770549572564535, 121525) where
@@ -35,13 +41,19 @@ test_single_result_2 = test $ (value, M.size map) @?= (0.4590041950276001, 50074
                        , Tal.more_craft = 5
                        }
 
+prop_moves_shrink_state :: Tal.Board -> Bool
+prop_moves_shrink_state game = all (< game) options where
+    options = concatMap (toList . (flip r_move game)) $ moves game
+
 all_tests :: Test
 all_tests = test [test_single_result_1, test_single_result_2]
 
+return []
 main :: IO ()
 main = do
+  results <- $quickCheckAll
   Counts { failures = f, errors = e } <- runTestTT all_tests
-  if f + e == 0 then
+  if f + e == 0 && results then
       exitWith ExitSuccess
   else
-      exitWith $ ExitFailure $ f + e
+      exitWith $ ExitFailure $ f + e + (if results then 0 else 1)

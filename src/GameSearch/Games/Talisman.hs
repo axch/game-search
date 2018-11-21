@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StrictData #-}
@@ -105,6 +106,7 @@ module GameSearch.Games.Talisman where
 --     and "does not have Fate" branches, and code them essentially
 --     separately.
 
+import GHC.Generics (Generic)
 import Data.Word (Word8)
 
 import GameSearch.Types
@@ -136,7 +138,7 @@ data Position = ValleyOfFire
               | PlainOfPeril
               | SPortalOfPower
               | PortalOfPower Die Die
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
 
 data Status = Status
     { lives :: SmallInt
@@ -147,7 +149,7 @@ data Status = Status
     , base_craft :: SmallInt
     , more_craft :: SmallInt
     }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
 
 minus :: SmallInt -> SmallInt -> SmallInt
 minus n k | n >= k = n - k
@@ -175,10 +177,10 @@ lose_craft :: SmallInt -> Status -> Status
 lose_craft k Status {..} = Status {more_craft = (more_craft `minus` k), ..}
 
 data Fork = Strength | Craft
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
 
 data Board = Board SmallInt Fork Status Position -- The int is the amount of time left
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
 
 instance Renderable Board where
     render = putStrLn . show
