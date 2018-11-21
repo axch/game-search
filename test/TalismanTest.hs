@@ -42,8 +42,7 @@ instance Arbitrary Position where
       , return SDiceWithDeath
       , liftM2 Crypt die two_dice
       , return SCrypt
-      , liftM3 FightPitFiends die die die
-      , liftM SFightPitFiends die
+      , liftM2 FightPitFiends die arbitrary
       , liftM PitFiends die
       , return SPitFiends
       , liftM Vampire $ choose (1, 3)
@@ -55,6 +54,10 @@ instance Arbitrary Position where
       , return SPortalOfPower
       ]
 
+    shrink = genericShrink
+
+instance Arbitrary Combat where
+    arbitrary = oneof [ return Start, liftM2 Fight die die]
     shrink = genericShrink
 
 instance Arbitrary Fork where

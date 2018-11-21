@@ -127,8 +127,7 @@ data Position = ValleyOfFire
               | SDiceWithDeath
               | Crypt Die SmallInt
               | SCrypt
-              | FightPitFiends SmallInt Die Die
-              | SFightPitFiends SmallInt
+              | FightPitFiends SmallInt Combat
               | PitFiends Die
               | SPitFiends
               | Vampire Die
@@ -138,6 +137,10 @@ data Position = ValleyOfFire
               | PlainOfPeril
               | PortalOfPower Die Die
               | SPortalOfPower
+  deriving (Eq, Ord, Show, Generic)
+
+data Combat = Fight Die Die
+            | Start
   deriving (Eq, Ord, Show, Generic)
 
 data Status = Status
@@ -201,8 +204,8 @@ available_moves SVampire = [Proceed]
 available_moves (Vampire _) = [Proceed, Reroll 0]
 available_moves SPitFiends = [Proceed]
 available_moves (PitFiends _) = [Proceed, Reroll 0]
-available_moves (SFightPitFiends _) = [Proceed]
-available_moves (FightPitFiends _ _ _) = [Proceed, Reroll 0]
+available_moves (FightPitFiends _ Start) = [Proceed]
+available_moves (FightPitFiends _ (Fight _ _)) = [Proceed, Reroll 0]
 available_moves SCrypt = [Proceed]
 available_moves (Crypt _ _) = [Proceed, Reroll 0]
 available_moves SDiceWithDeath = [Proceed]
@@ -275,23 +278,23 @@ do_move Proceed (Board n f s SPitFiends) = do
   d1 <- d6
   return $ Board n f s (PitFiends d1)
 do_move Proceed (Board n f s (PitFiends d1)) =
-    return $ Board n f s (SFightPitFiends d1)
+    return $ Board n f s (FightPitFiends d1 Start)
 do_move (Reroll 0) (Board n f s (PitFiends _)) = do
   new_d <- d6
   do_move Proceed $ Board n f (lose_fate 1 s) $ PitFiends new_d
-do_move Proceed (Board n f s (SFightPitFiends 0)) =
+do_move Proceed (Board n f s (FightPitFiends 0 Start)) =
     return $ Board (n-1) f s ValleyOfFire
-do_move Proceed (Board n f s (SFightPitFiends count)) = do
+do_move Proceed (Board n f s (FightPitFiends count Start)) = do
   d1 <- d6
   d2 <- d6
-  return $ Board n f s $ FightPitFiends count d1 d2
-do_move Proceed (Board n f s (FightPitFiends count d1 d2))
-    | combat_strength s + d1 > 4 + d2  = return $ Board n f s (SFightPitFiends $ count - 1)
-    | combat_strength s + d1 == 4 + d2 = return $ Board (n-1) f s (SFightPitFiends count)
-    | otherwise = return $ Board (n-1) f (lose_life 1 s) (SFightPitFiends count)
-do_move (Reroll 0) (Board n f s (FightPitFiends count _ d2)) = do
+  return $ Board n f s $ FightPitFiends count $ Fight d1 d2
+do_move Proceed (Board n f s (FightPitFiends count (Fight d1 d2)))
+    | combat_strength s + d1 > 4 + d2  = return $ Board n f s (FightPitFiends (count - 1) Start)
+    | combat_strength s + d1 == 4 + d2 = return $ Board (n-1) f s (FightPitFiends count Start)
+    | otherwise = return $ Board (n-1) f (lose_life 1 s) (FightPitFiends count Start)
+do_move (Reroll 0) (Board n f s (FightPitFiends count (Fight _ d2))) = do
   new_d <- d6
-  do_move Proceed $ Board n f (lose_fate 1 s) $ FightPitFiends count new_d d2
+  do_move Proceed $ Board n f (lose_fate 1 s) $ FightPitFiends count $ Fight new_d d2
 do_move Proceed (Board n f s SCrypt) = do
   d1 <- d6
   d2 <- d6
