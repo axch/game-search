@@ -32,27 +32,27 @@ instance Arbitrary Position where
 
     arbitrary = oneof
       [ return ValleyOfFire
-      , return SWerewolf
-      , liftM2 Werewolf die die
-      , liftM SFightWerewolf two_dice
       , liftM3 FightWerewolf two_dice die die
-      , return SDiceWithDeath
-      , liftM4 DiceWithDeath die die die die
+      , liftM SFightWerewolf two_dice
+      , liftM2 Werewolf die die
+      , return SWerewolf
       , liftM3 DiceWithDeathA two_dice die die
       , liftM3 DiceWithDeathB die die two_dice
-      , return SCrypt
+      , liftM4 DiceWithDeath die die die die
+      , return SDiceWithDeath
       , liftM2 Crypt die two_dice
-      , return SPitFiends
-      , liftM PitFiends die
-      , liftM SFightPitFiends die
+      , return SCrypt
       , liftM3 FightPitFiends die die die
-      , return SVampire
+      , liftM SFightPitFiends die
+      , liftM PitFiends die
+      , return SPitFiends
       , liftM Vampire $ choose (1, 3)
-      , return SMine
+      , return SVampire
       , liftM2 Mine die two_dice
+      , return SMine
       , return PlainOfPeril
-      , return SPortalOfPower
       , liftM2 PortalOfPower die die
+      , return SPortalOfPower
       ]
 
     shrink = genericShrink

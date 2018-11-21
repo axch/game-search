@@ -117,27 +117,27 @@ type Die = SmallInt
 -- Positions prefixed with "S" are starting points, where one has not
 -- yet rolled any dice for the space.
 data Position = ValleyOfFire
-              | SWerewolf
-              | Werewolf Die Die
-              | SFightWerewolf SmallInt
               | FightWerewolf SmallInt Die Die
-              | SDiceWithDeath
-              | DiceWithDeath Die Die Die Die
+              | SFightWerewolf SmallInt
+              | Werewolf Die Die
+              | SWerewolf
               | DiceWithDeathA SmallInt Die Die -- Rerolled one of mine first
               | DiceWithDeathB Die Die SmallInt -- Rerolled one of Death's first
-              | SCrypt
+              | DiceWithDeath Die Die Die Die
+              | SDiceWithDeath
               | Crypt Die SmallInt
-              | SPitFiends
-              | PitFiends Die
-              | SFightPitFiends SmallInt
+              | SCrypt
               | FightPitFiends SmallInt Die Die
-              | SVampire
+              | SFightPitFiends SmallInt
+              | PitFiends Die
+              | SPitFiends
               | Vampire Die
-              | SMine
+              | SVampire
               | Mine Die SmallInt -- The int is the sum of the lower two dice
+              | SMine
               | PlainOfPeril
-              | SPortalOfPower
               | PortalOfPower Die Die
+              | SPortalOfPower
   deriving (Eq, Ord, Show, Generic)
 
 data Status = Status
