@@ -41,9 +41,10 @@ test_single_result_2 = test $ (value, M.size map) @?= (0.4590041950276001, 50074
                        , Tal.more_craft = 5
                        }
 
-prop_moves_shrink_state :: Tal.Board -> Bool
-prop_moves_shrink_state game = all (< game) options where
-    options = concatMap (toList . (flip r_move game)) $ moves game
+prop_moves_shrink_state :: Tal.Board -> Property
+prop_moves_shrink_state game@(Tal.Board time _ _ _) =
+    time >= 1 ==> all (< game) options where
+        options = concatMap (toList . (flip r_move game)) $ moves game
 
 all_tests :: Test
 all_tests = test [test_single_result_1, test_single_result_2]
