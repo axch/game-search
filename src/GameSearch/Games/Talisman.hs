@@ -356,8 +356,9 @@ do_move mv brd = error $ "Move " ++ show mv ++ " is not legal from board " ++ sh
 
 instance RGame Board Move where
     type Player Board = Solitaire
-    moves (Board _ _ Status{..} p) | fate == 0 = [Proceed]
-                                   | otherwise = available_moves p
+    moves (Board _ _ Status{..} p) = filter fated $ available_moves p where
+                          fated (Reroll _) = fate > 0
+                          fated _ = True
     r_move = do_move
     valid _ = const True -- TODO: Actually validate the moves
     payoff (Board 0 _ _ _) Self = Just 0
