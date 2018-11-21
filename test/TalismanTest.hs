@@ -62,5 +62,5 @@ instance Arbitrary Fork where
     shrink = genericShrink
 
 instance Arbitrary Board where
-    arbitrary = liftM4 Board (choose (0, 20)) arbitrary arbitrary arbitrary
+    arbitrary = liftM4 Board (choose (1, 20)) arbitrary arbitrary arbitrary
     shrink = genericShrink
