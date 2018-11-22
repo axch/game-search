@@ -20,7 +20,9 @@ module GameSearch.Expectimax where
 -- Exact Expectimax computations (for games whose state space is small
 -- enough for this to be feasible).
 
+import Control.Monad.Trans.Writer.Strict
 import Control.Monad.State
+import Data.Foldable (foldl')
 import Data.Function (on)
 import Data.List (maximumBy)
 import qualified Data.Map as M
@@ -66,3 +68,19 @@ memoize f x = do
                 v <- f x
                 modify (M.insert x v)
                 return v
+
+visit_probabilities :: forall a m p. (Ord a, RGame a m, Player a ~ Solitaire, Fractional p) =>
+                       a -> Caching a (Maybe m, Double) (M.Map a p)
+visit_probabilities start = execWriterT $ go $ M.singleton start 1 where
+  go queue | M.null queue = return ()
+           | otherwise = step queue >>= go
+  step :: M.Map a p -> WriterT (M.Map a p) (Caching a (Maybe m, Double)) (M.Map a p)
+  step queue = do
+    let ((game, prob), queue') = M.deleteFindMax queue
+    tell $ M.singleton game prob
+    (maybe_move, _) <- lift $ expectimax game
+    case maybe_move of
+      (Just m) -> return $ foldl' insert queue' items where
+                    (Probabilities items) = r_move m game
+                    insert q (p, new_game) = M.insertWith (+) new_game (prob * p) q
+      Nothing -> return queue'
