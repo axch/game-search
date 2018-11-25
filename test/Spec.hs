@@ -10,8 +10,8 @@ import System.Exit
 import Test.HUnit
 import Test.QuickCheck
 
-import GameSearch.Expectimax (best_move, expectimax)
-import GameSearch.Types (r_move, moves)
+import GameSearch.Expectimax (best_move, expectimax, visit_probabilities)
+import GameSearch.Types (finished, r_move, moves)
 import qualified GameSearch.Games.Heads as Heads
 import qualified GameSearch.Games.Talisman as Tal
 import TalismanTest
@@ -49,6 +49,12 @@ prop_moves_shrink_state game@(Tal.Board time _ _ _) =
 
 prop_solve_timed_heads :: Int -> Property
 prop_solve_timed_heads n = n > 1 ==> (best_move $ Heads.TPlay n) == (Just (), 1 - (1/2)**(fromIntegral n))
+
+prop_timed_heads_results :: Int -> Property
+prop_timed_heads_results n = n > 1 ==> result == answer where
+    result = M.filterWithKey (\g p -> finished g) $ visit_probabilities $ Heads.TPlay n
+    answer = M.fromList [(Heads.TWon, 1 - p_lose), (Heads.TPlay 0, p_lose)]
+    p_lose = (1/2)**(fromIntegral n)
 
 all_tests :: Test
 all_tests = test [test_single_result_1, test_single_result_2]

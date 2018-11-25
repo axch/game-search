@@ -46,7 +46,7 @@ instance RGame Heads () where
 -- Here is a variant that gives a specific budget of turns to win, or
 -- you lose.
 
-data TimedHeads = TPlay Int | TWon deriving (Eq, Ord, Show, Read)
+data TimedHeads = TWon | TPlay Int deriving (Eq, Ord, Show, Read)
 
 instance Renderable TimedHeads where
     render = putStrLn . show

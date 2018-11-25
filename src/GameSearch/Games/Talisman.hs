@@ -34,8 +34,9 @@ module GameSearch.Games.Talisman where
 -- c) Choosing when to attempt it is a significant decision in one's
 --    play of the overall game.
 
--- So far, this is a reasonable model of the Crypt-Death-Werewolf fork,
--- with dead (but activatable) code for the Mine-Vampire-Pits fork.
+-- So far, this is a reasonable model of the Crypt-Death-Werewolf and
+-- the Mine-Vampire-Pits forks as separate end-games, but without
+-- allowing dynamic choice of path.
 
 -- TODO expand the model with:
 -- + The craft attribute
@@ -66,6 +67,8 @@ module GameSearch.Games.Talisman where
 --   - FightPitFiends 6^3 to 6^3
 --   - Ergo, this should be worth a 3x reduction in the search space
 -- - Strictifying things should help
+--   - Maybe put in a Criterion benchmark of an easy run before doing this?
+--     - http://www.serpentine.com/criterion/tutorial.html
 -- + I can reuse the move cache across multiple top-level position
 --   evaluations in the main driver.
 -- - However, keeping the move cache around can lead to avoidable OOM

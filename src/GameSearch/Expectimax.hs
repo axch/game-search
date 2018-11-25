@@ -69,9 +69,13 @@ memoize f x = do
                 modify (M.insert x v)
                 return v
 
-visit_probabilities :: forall a m p. (Ord a, RGame a m, Player a ~ Solitaire, Fractional p) =>
-                       a -> Caching a (Maybe m, Double) (M.Map a p)
-visit_probabilities start = execWriterT $ go $ M.singleton start 1 where
+visit_probabilities :: (Ord a, RGame a m, Player a ~ Solitaire, Fractional p) =>
+                       a -> (M.Map a p)
+visit_probabilities start = evalState (visit_probabilitiesM start) M.empty
+
+visit_probabilitiesM :: forall a m p. (Ord a, RGame a m, Player a ~ Solitaire, Fractional p) =>
+                        a -> Caching a (Maybe m, Double) (M.Map a p)
+visit_probabilitiesM start = execWriterT $ go $ M.singleton start 1 where
   go queue | M.null queue = return ()
            | otherwise = step queue >>= go
   step :: M.Map a p -> WriterT (M.Map a p) (Caching a (Maybe m, Double)) (M.Map a p)
