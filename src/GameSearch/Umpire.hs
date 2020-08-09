@@ -34,7 +34,7 @@ import GameSearch.Types
 --
 -- is just (a -> r m)
 
-tty_choose :: (Game a m, CtxParseable a m, Show (Player a)) => a -> IO m
+tty_choose :: (RGame a m, CtxParseable a m, Show (Player a)) => a -> IO m
 tty_choose g = do
   render g
   putStr $ "You are " ++ show (current g) ++ " > "
@@ -73,7 +73,7 @@ render_evaluation eval g = do
 
 -- `versus` composes two strategies for the same two-player game by
 -- pitting them against each other.
-versus :: (Game a m, Player a ~ TwoPlayer) => (a -> b) -> (a -> b) -> a -> b
+versus :: (RGame a m, Player a ~ TwoPlayer) => (a -> b) -> (a -> b) -> a -> b
 versus strat1 strat2 g = case current g of
                            Player1 -> strat1 g
                            Player2 -> strat2 g
@@ -81,6 +81,8 @@ versus strat1 strat2 g = case current g of
 
 -- `game` runs a game to completion, checking that none of the players
 -- are trying to make illegal moves.
+-- TODO(axch): Support random games by choosing the outcome
+-- according to the given probability distribution.
 game :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 game strat = go where
   go g | finished g = return g
