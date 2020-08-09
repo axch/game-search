@@ -4,12 +4,14 @@ A Suite of Simple Generic Game Players
 This package contains a Haskell implementation of a (currently small)
 suite of generic game players.
 
-The primary implemented play strategy is UCT, parameterized by the
-number of playouts to do before choosing a move to play.  We also have
+The available strategies are
+- MCTS with UCT, parameterized by the number of playouts per move,
+- MCTS with UCB1, also parameterized by playouts
 - Uniformly random
-- UCB1
 - "Take Obvious Moves" modification (see below)
-- Solving (small state-space) solitaires exactly
+- Exact solve with expectimax (for small-state-space solitaires,
+  including 1.5-player)
+- Letting a human play at the terminal
 
 The players are generic in the sense that they can play any game that
 implements the Game interface in `src/Types.hs`.  This is not to be
@@ -28,6 +30,7 @@ Code organization:
   - Part of the endgame for Talisman in `GameSearch.Games.Talisman`
 - Overall driver for running tournaments, playing vs human, or
   studying win probabilities in `app/Main.hs`
+- Specific study of the Talisman endgame in `app/TalismanProbs.hs`
 
 Status: The UCT player has been tested on m,n,k games (a generalization of
 tic-tac-toe), and seems to behave generally as expected.  I get the

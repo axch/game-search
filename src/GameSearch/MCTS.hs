@@ -30,23 +30,30 @@ import GameSearch.Types
 ones :: [Double]
 ones = 1:ones
 
-uniform_choose :: (MonadRandom r, Game a m) => a -> r m
+-- `uniform_choose` is a strategy that just picks a random legal move
+-- uniformly.
+uniform_choose :: (MonadRandom r, RGame a m) => a -> r m
 uniform_choose g = do
   index <- sample $ Uni.uniform 0 (n-1)
   return $ ms!!index
     where
       ms = moves g
       n = length ms
-{-# SPECIALIZE uniform_choose :: (Game a m) => a -> IO m #-}
+{-# SPECIALIZE uniform_choose :: (RGame a m) => a -> IO m #-}
 
-take_obvious_plays :: (MonadRandom r, Game a m) => a -> r m
+-- `take_obvious_plays` is a strategy that tries to take or block any
+-- available game-specific one-move wins, and otherwise just picks a
+-- random legal move uniformly.
+take_obvious_plays :: (MonadRandom r, RGame a m) => a -> r m
 take_obvious_plays g =
   case known_one_move_wins g of
     (m:_) -> return m
     [] -> case known_one_move_blocks g of
             (m:_) -> return m
             [] -> uniform_choose g
+{-# SPECIALIZE take_obvious_plays :: (RGame a m) => a -> IO m #-}
 
+-- `play_out` runs a playout, making moves until the end of the game.
 play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 play_out strat = go where
   go g | finished g = return g
@@ -92,6 +99,8 @@ select_final_move (OneLevel _ state) = return m where
     value (_, (_, tries)) = tries
     (m, (_, _)) = maximumBy (compare `on` value) $ M.toList state
 
+-- `ucb1_choose n substrat` is a UCB1 strategy that does n playouts
+-- using `substrat`.
 ucb1_choose :: (Ord m, Game a m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
 ucb1_choose tries substrat g = go tries $ empty_level $ moves g where
     go tries_left level | tries_left == 0 = select_final_move level
@@ -166,6 +175,8 @@ select_final_move' (UCTree _ state) = return m where
     (m, _) = maximumBy (compare `on` value) $ M.toList state
 {-# SPECIALIZE select_final_move' :: UCTree m -> IO m #-}
 
+-- `uct_choose n substrat` is a UCT strategy that does n playouts
+-- using `substrat`.
 uct_choose :: (Game a m, Ord m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
 uct_choose tries substrat g = go tries $ empty_subtree $ moves g where
     go tries_left tree | tries_left == 0 = select_final_move' tree

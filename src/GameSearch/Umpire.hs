@@ -27,6 +27,13 @@ import Data.Random (MonadRandom)
 
 import GameSearch.Types
 
+-- A strategy for playing
+-- - a game of type a
+-- - with moves of type m
+-- - given access to monad r
+--
+-- is just (a -> r m)
+
 tty_choose :: (Game a m, CtxParseable a m, Show (Player a)) => a -> IO m
 tty_choose g = do
   render g
@@ -64,12 +71,16 @@ render_evaluation eval g = do
   res <- eval g
   putStrLn $ show res
 
+-- `versus` composes two strategies for the same two-player game by
+-- pitting them against each other.
 versus :: (Game a m, Player a ~ TwoPlayer) => (a -> b) -> (a -> b) -> a -> b
 versus strat1 strat2 g = case current g of
                            Player1 -> strat1 g
                            Player2 -> strat2 g
 {-# INLINE versus #-}
 
+-- `game` runs a game to completion, checking that none of the players
+-- are trying to make illegal moves.
 game :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 game strat = go where
   go g | finished g = return g
@@ -77,6 +88,8 @@ game strat = go where
                         go $ assert (valid m g) $ move m g
 {-# SPECIALIZE game :: (Game a m) => (a -> IO m) -> a -> IO a #-}
 
+-- `match n` runs n games from the same starting position to see how
+-- they come out.
 match :: (Monoid res, Game a m, MonadRandom r) => Int -> (a -> r m) -> (a -> res) -> a -> r res
 match n strat eval start =
     liftM mconcat $ liftM (map eval) $ replicateM n (game strat start)

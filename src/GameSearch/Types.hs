@@ -85,6 +85,13 @@ instance (Num p) => Monad (Probabilities p) where
 --   (where the outcome probabilities are not exposed to analysis,
 --   e.g. for performance).
 
+-- RGame a m is a class of random games with
+-- - state type a
+-- - move type m
+-- - associated type Player a giving the number of players
+--
+-- Making move m against game a produces a probability distribution
+-- over possible outcomes, with analytically available probabilities.
 class (Eq a, Renderable a) => RGame a m | a -> m where
     type Player a :: *
     moves :: a -> [m]
@@ -104,6 +111,12 @@ class (Eq a, Renderable a) => RGame a m | a -> m where
 -- as placing a piece in Go), as this seems more common than moves
 -- being bound to the positions they come from.
 
+-- Game a m is a class of deterministic games with
+-- - state type a
+-- - move type m
+-- - associated type Player a giving the number of players
+--
+-- A deterministic game is also trivially a random game.
 class (RGame a m) => Game a m where
     move :: m -> a -> a
 
