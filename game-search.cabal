@@ -15,13 +15,14 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     GameSearch.Types
+  exposed-modules:     GameSearch.Expectimax
                      , GameSearch.MCTS
-                     , GameSearch.Expectimax
-                     , GameSearch.Games.TicTacToe
-                     , GameSearch.Umpire
+                     , GameSearch.Types
+                     , GameSearch.Games.AxisAndAlliesCombat
                      , GameSearch.Games.Heads
                      , GameSearch.Games.Talisman
+                     , GameSearch.Games.TicTacToe
+                     , GameSearch.Umpire
   build-depends:       base >= 4.7 && < 5
                      , containers
                      , lens
