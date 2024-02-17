@@ -12,6 +12,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
+
 module GameSearch.MCTS where
 
 -- Monte Carlo Tree Search style players: random playouts, UCB1, UCT.

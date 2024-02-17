@@ -14,6 +14,8 @@
 
 {-# LANGUAGE BinaryLiterals #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
