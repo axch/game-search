@@ -27,7 +27,6 @@ import Data.Function (on)
 import Data.List (maximumBy)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
-import Data.Traversable (mapM)
 
 import GameSearch.Types
 

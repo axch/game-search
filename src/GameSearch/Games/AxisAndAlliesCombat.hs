@@ -80,17 +80,21 @@ targetable target (Force units) = map Remove $ filter target $ M.keys units
 -- of the time.
 available_moves :: Position -> [Move]
 available_moves Position{ step = AAGunsFire } = [Proceed]
-available_moves Position{ step = (RemoveAirCasualties n), .. } = targetable target attacker where
-    target Unit{ body_type = Air } = True
-    target _ = False
+available_moves Position{ step = (RemoveAirCasualties _n), .. } =
+    targetable target attacker where
+        target Unit{ body_type = Air } = True
+        target _ = False
 available_moves Position{ step = AttackSubmarinesFire } = [Proceed]
-available_moves Position{ step = (RemoveSubmarineCasualties n), .. } = targetable target defender where
-    target Unit{ body_type = Air } = False
-    target _ = True
+available_moves Position{ step = (RemoveSubmarineCasualties _n), .. } =
+    targetable target defender where
+        target Unit{ body_type = Air } = False
+        target _ = True
 available_moves Position{ step = AttackOthersFire } = [Proceed]
-available_moves Position{ step = (DefenderSelectCasualties n), .. } = targetable (const True) defender where
+available_moves Position{ step = (DefenderSelectCasualties _n), .. } =
+    targetable (const True) defender where
 available_moves Position{ step = DefenderFire } = [Proceed]
-available_moves Position{ step = (RemoveCasualties n1 n2), .. } = targetable (const True) attacker where
+available_moves Position{ step = (RemoveCasualties _n1 _n2), .. } =
+    targetable (const True) attacker where
 available_moves Position{ step = AttackerSubmarinesMayWithdraw } = [Proceed, Withdraw]
 available_moves Position{ step = DefenderSubmarinesMayWithdraw } = [Proceed, Withdraw]
 available_moves Position{ step = AttackerMayWithdraw } = [Proceed, Withdraw]

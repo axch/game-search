@@ -224,8 +224,8 @@ available_moves ValleyOfFire = []
 d6 :: (Fractional p) => Probabilities p SmallInt
 d6 = Probabilities [(p, 1), (p, 2), (p, 3), (p, 4), (p, 5), (p, 6)] where p = 1.0/6
 
-d3 :: (Fractional p) => Probabilities p SmallInt
-d3 = Probabilities [(p, 1), (p, 2), (p, 3)] where p = 1.0/3
+roll_d3 :: (Fractional p) => Probabilities p SmallInt
+roll_d3 = Probabilities [(p, 1), (p, 2), (p, 3)] where p = 1.0/3
 
 -- Helper implementing symmetry collapse for situations where two dice
 -- were rolled.
@@ -274,12 +274,12 @@ do_move (Reroll 0) (Board n f s (Mine _ d2_d3)) = do
   new_d <- d6  -- May no longer be the maximum, but doesn't matter
   do_move Proceed (Board n f (lose_fate 1 s) (Mine new_d d2_d3))
 do_move Proceed (Board n f s SVampire) = do
-  d1 <- d3
+  d1 <- roll_d3
   return $ Board n f s $ Vampire d1
 do_move Proceed (Board n f s (Vampire drain)) = do
   return $ Board (n-1) f (lose_life drain s) SPitFiends
 do_move (Reroll 0) (Board n f s (Vampire _)) = do
-  new_d <- d3
+  new_d <- roll_d3
   do_move Proceed $ (Board n f s (Vampire new_d))
 do_move Proceed (Board n f s SPitFiends) = do
   d1 <- d6
