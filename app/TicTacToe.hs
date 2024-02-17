@@ -53,5 +53,6 @@ do_benchmark = do
   [arg1, arg2, arg3] <- Sys.getArgs
   benchmark (read arg1) (read arg2) (read arg3)
 
+main :: IO ()
 -- main = do_one_game
 main = do_benchmark
