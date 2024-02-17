@@ -21,20 +21,25 @@ import Data.List (maximumBy)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import GHC.Base (assert)
-
-import Data.Random
-import qualified Data.Random.Distribution.Uniform as Uni
+import System.Random
 
 import GameSearch.Types
 
 ones :: [Double]
 ones = 1:ones
 
+class Monad r => MonadUnifRandom r where
+    sample :: Int -> Int -> r Int
+
+instance MonadUnifRandom IO where
+    sample lo hi = randomRIO (lo, hi)
+    {-# INLINE sample #-}
+
 -- `uniform_choose` is a strategy that just picks a random legal move
 -- uniformly.
-uniform_choose :: (MonadRandom r, RGame a m) => a -> r m
+uniform_choose :: (MonadUnifRandom r, RGame a m) => a -> r m
 uniform_choose g = do
-  index <- sample $ Uni.uniform 0 (n-1)
+  index <- sample 0 (n-1)
   return $ ms!!index
     where
       ms = moves g
@@ -44,7 +49,7 @@ uniform_choose g = do
 -- `take_obvious_plays` is a strategy that tries to take or block any
 -- available game-specific one-move wins, and otherwise just picks a
 -- random legal move uniformly.
-take_obvious_plays :: (MonadRandom r, RGame a m) => a -> r m
+take_obvious_plays :: (MonadUnifRandom r, RGame a m) => a -> r m
 take_obvious_plays g =
   case known_one_move_wins g of
     (m:_) -> return m
@@ -54,7 +59,7 @@ take_obvious_plays g =
 {-# SPECIALIZE take_obvious_plays :: (RGame a m) => a -> IO m #-}
 
 -- `play_out` runs a playout, making moves until the end of the game.
-play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
+play_out :: (Game a m, Monad r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 play_out strat = go where
   go g | finished g = return g
        | otherwise = do m <- strat g
@@ -71,11 +76,11 @@ data OneLevel m = OneLevel Int (M.Map m (Double, Int))
 empty_level :: (Ord m) => [m] -> OneLevel m
 empty_level ms = OneLevel 0 $ M.fromList $ zip ms $ repeat (0, 0)
 
-update_once :: (Ord m, Game a m, MonadRandom r) =>
+update_once :: (Ord m, Game a m, Monad r) =>
                (a -> r m) -> a -> m -> OneLevel m -> r (OneLevel m)
 update_once substrat g m (OneLevel tot state) = do
   g'' <- play_out substrat $ move m g
-  let (Just p) = payoff g'' (current g)
+  let p = fromJust $ payoff g'' (current g)
   return $ OneLevel (tot+1) $ M.adjust (\(old_p, n) -> (old_p + p, n + 1)) m state
 
 exploration_parameter :: Double
@@ -84,8 +89,8 @@ exploration_parameter = sqrt 2
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
 -- taking the lexicographically earliest move.
-select_move :: (MonadRandom r) => OneLevel m -> r m
-select_move (OneLevel tot state) = return m where
+select_move :: OneLevel m -> m
+select_move (OneLevel tot state) = m where
     value (_, (_, 0)) = 1/0
     value (_, (score, tries)) =
         score / fromIntegral tries
@@ -94,18 +99,18 @@ select_move (OneLevel tot state) = return m where
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
-select_final_move :: (MonadRandom r) => OneLevel m -> r m
-select_final_move (OneLevel _ state) = return m where
+select_final_move :: OneLevel m -> m
+select_final_move (OneLevel _ state) = m where
     value (_, (_, tries)) = tries
     (m, (_, _)) = maximumBy (compare `on` value) $ M.toList state
 
 -- `ucb1_choose n substrat` is a UCB1 strategy that does n playouts
 -- using `substrat`.
-ucb1_choose :: (Ord m, Game a m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
+ucb1_choose :: (Ord m, Game a m, Monad r) => Int -> (a -> r m) -> a -> r m
 ucb1_choose tries substrat g = go tries $ empty_level $ moves g where
-    go tries_left level | tries_left == 0 = select_final_move level
+    go tries_left level | tries_left == 0 = return $ select_final_move level
                         | otherwise = do
-      m <- select_move level
+      let m = select_move level
       level' <- update_once substrat g m level
       go (tries_left - 1) level'
 
@@ -132,7 +137,7 @@ empty_subtree ms = assert (length ms > 0) $ UCTree 0 $ M.fromList $ zip ms $ rep
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
 -- taking the lexicographically earliest move.
-select_move' :: (MonadRandom r) => UCTree m -> r m
+select_move' :: (Monad r) => UCTree m -> r m
 select_move' (UCTree tot state) = return m where
     value (_, (_, _, 0)) = 1/0
     value (_, (_, score, tries)) =
@@ -144,8 +149,9 @@ select_move' (UCTree tot state) = return m where
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
 -- function for the caller's benefit.
-at_selected_state :: (Game a m, Ord m, MonadRandom r) => (a -> r (Player a -> Double)) -> a -> UCTree m
-                     -> r ((UCTree m), (Player a -> Double))
+at_selected_state :: (Game a m, Ord m, Monad r)
+  => (a -> r (Player a -> Double)) -> a -> UCTree m
+  -> r ((UCTree m), (Player a -> Double))
 at_selected_state eval g t@(UCTree tot state) = do
   m <- select_move' t
   let g' = move m g
@@ -163,7 +169,7 @@ at_selected_state eval g t@(UCTree tot state) = do
 {-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player a -> Double)) -> a -> UCTree m
   -> IO ((UCTree m), (Player a -> Double)) #-}
 
-one_play_out :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r (Player a -> Double)
+one_play_out :: (Game a m, Monad r) => (a -> r m) -> a -> r (Player a -> Double)
 one_play_out strat g = do
   end <- play_out strat g
   return $ fromJust . payoff end
@@ -171,7 +177,7 @@ one_play_out strat g = do
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
-select_final_move' :: (MonadRandom r) => UCTree m -> r m
+select_final_move' :: (Monad r) => UCTree m -> r m
 select_final_move' (UCTree _ state) = return m where
     value (_, (_, _, tries)) = tries
     (m, _) = maximumBy (compare `on` value) $ M.toList state
@@ -179,7 +185,7 @@ select_final_move' (UCTree _ state) = return m where
 
 -- `uct_choose n substrat` is a UCT strategy that does n playouts
 -- using `substrat`.
-uct_choose :: (Game a m, Ord m, MonadRandom r) => Int -> (a -> r m) -> a -> r m
+uct_choose :: (Game a m, Ord m, Monad r) => Int -> (a -> r m) -> a -> r m
 uct_choose tries substrat g = go tries $ empty_subtree $ moves g where
     go tries_left tree | tries_left == 0 = select_final_move' tree
                        | otherwise = do

@@ -23,8 +23,6 @@ import Control.Monad
 import GHC.Base (assert)
 import System.IO
 
-import Data.Random (MonadRandom)
-
 import GameSearch.Types
 
 -- A strategy for playing
@@ -83,7 +81,7 @@ versus strat1 strat2 g = case current g of
 -- are trying to make illegal moves.
 -- TODO(axch): Support random games by choosing the outcome
 -- according to the given probability distribution.
-game :: (Game a m, MonadRandom r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
+game :: (Game a m, Monad r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
 game strat = go where
   go g | finished g = return g
        | otherwise = do m <- strat g
@@ -92,7 +90,7 @@ game strat = go where
 
 -- `match n` runs n games from the same starting position to see how
 -- they come out.
-match :: (Monoid res, Game a m, MonadRandom r) => Int -> (a -> r m) -> (a -> res) -> a -> r res
+match :: (Monoid res, Game a m, Monad r) => Int -> (a -> r m) -> (a -> res) -> a -> r res
 match n strat eval start =
     liftM mconcat $ liftM (map eval) $ replicateM n (game strat start)
 {-# SPECIALIZE match :: (Monoid res, Game a m) => Int -> (a -> IO m) -> (a -> res) -> a -> IO res #-}

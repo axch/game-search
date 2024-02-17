@@ -22,6 +22,7 @@ module GameSearch.Types where
 -- Base definitions; Game interface.
 
 import Control.Monad (ap)
+import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.Traversable
 
@@ -70,11 +71,10 @@ instance Traversable (Probabilities p) where
           as = traverse (f . snd) items
 
 instance (Num p) => Applicative (Probabilities p) where
-    pure = return
+    pure a = Probabilities [(1, a)]
     (<*>) = ap
 
 instance (Num p) => Monad (Probabilities p) where
-    return a = Probabilities [(1, a)]
     (>>=) ps f = expectation $ fmap f ps
 
 -- Nomenclature:
@@ -93,7 +93,7 @@ instance (Num p) => Monad (Probabilities p) where
 -- Making move m against game a produces a probability distribution
 -- over possible outcomes, with analytically available probabilities.
 class (Eq a, Renderable a) => RGame a m | a -> m where
-    type Player a :: *
+    type Player a :: Type
     moves :: a -> [m]
     r_move :: (Fractional p) => m -> a -> Probabilities p a
     valid :: m -> a -> Bool
