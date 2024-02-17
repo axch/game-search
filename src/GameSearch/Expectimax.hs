@@ -14,12 +14,14 @@
 
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 
 module GameSearch.Expectimax where
 
 -- Exact Expectimax computations (for games whose state space is small
 -- enough for this to be feasible).
 
+import Control.Monad
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.State
 import Data.Foldable (foldl')

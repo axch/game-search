@@ -14,6 +14,7 @@
 
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 
 module GameSearch.Umpire where
 
