@@ -88,6 +88,7 @@ game strat = go where
        | otherwise = do m <- strat g
                         go $ assert (valid m g) $ move m g
 {-# SPECIALIZE game :: (Game a m) => (a -> IO m) -> a -> IO a #-}
+{-# INLINE game #-}
 
 -- `match n` runs n games from the same starting position to see how
 -- they come out.
@@ -95,3 +96,4 @@ match :: (Monoid res, Game a m, Monad r) => Int -> (a -> r m) -> (a -> res) -> a
 match n strat eval start =
     liftM mconcat $ liftM (map eval) $ replicateM n (game strat start)
 {-# SPECIALIZE match :: (Monoid res, Game a m) => Int -> (a -> IO m) -> (a -> res) -> a -> IO res #-}
+{-# INLINE match #-}

@@ -45,6 +45,7 @@ uniform_choose g = do
       ms = moves g
       n = length ms
 {-# SPECIALIZE uniform_choose :: (RGame a m) => a -> IO m #-}
+{-# INLINE uniform_choose #-}
 {-# SCC uniform_choose #-}
 
 -- `take_obvious_plays` is a strategy that tries to take or block any
@@ -58,6 +59,7 @@ take_obvious_plays g =
             (m:_) -> return m
             [] -> uniform_choose g
 {-# SPECIALIZE take_obvious_plays :: (RGame a m) => a -> IO m #-}
+{-# INLINE take_obvious_plays #-}
 {-# SCC take_obvious_plays #-}
 
 -- `play_out` runs a playout, making moves until the end of the game.
@@ -67,6 +69,7 @@ play_out strat = go where
        | otherwise = do m <- strat g
                         go $ move m g
 {-# SPECIALIZE play_out :: (Game a m) => (a -> IO m) -> a -> IO a #-}
+{-# INLINEABLE play_out #-}
 {-# SCC play_out #-}
 
 ----------------------------------------------------------------------
@@ -78,6 +81,7 @@ data OneLevel m = OneLevel Int (M.Map m (Double, Int))
 
 empty_level :: (Ord m) => [m] -> OneLevel m
 empty_level ms = OneLevel 0 $ M.fromList $ zip ms $ repeat (0, 0)
+{-# INLINEABLE empty_level #-}
 
 update_once :: (Ord m, Game a m, Monad r) =>
                (a -> r m) -> a -> m -> OneLevel m -> r (OneLevel m)
@@ -85,6 +89,7 @@ update_once substrat g m (OneLevel tot state) = do
   g'' <- play_out substrat $ move m g
   let p = fromJust $ payoff g'' (current g)
   return $ OneLevel (tot+1) $ M.adjust (\(old_p, n) -> (old_p + p, n + 1)) m state
+{-# INLINEABLE update_once #-}
 
 exploration_parameter :: Double
 exploration_parameter = sqrt 2
@@ -116,6 +121,7 @@ ucb1_choose tries substrat g = go tries $ empty_level $ moves g where
       let m = select_move level
       level' <- update_once substrat g m level
       go (tries_left - 1) level'
+{-# INLINEABLE ucb1_choose #-}
 
 ----------------------------------------------------------------------
 -- UCT
@@ -136,6 +142,7 @@ data UCTree m = UCTree Int (M.Map m (Maybe (UCTree m), Double, Int))
 
 empty_subtree :: (Ord m) => [m] -> UCTree m
 empty_subtree ms = assert (length ms > 0) $ UCTree 0 $ M.fromList $ zip ms $ repeat (Nothing, 0, 0)
+{-# INLINEABLE empty_subtree #-}
 
 -- Choose a move to explore
 -- TODO: they say I ought to break ties randomly, but for now just
@@ -172,6 +179,7 @@ at_selected_state eval g t@(UCTree tot state) = do
            return (UCTree (tot+1) state', win)
 {-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player a -> Double)) -> a -> UCTree m
   -> IO ((UCTree m), (Player a -> Double)) #-}
+{-# INLINE at_selected_state #-}
 {-# SCC at_selected_state #-}
 
 one_play_out :: (Game a m, Monad r) => (a -> r m) -> a -> r (Player a -> Double)
@@ -179,6 +187,7 @@ one_play_out strat g = do
   end <- play_out strat g
   return $ fromJust . payoff end
 {-# SPECIALIZE one_play_out :: (Game a m) => (a -> IO m) -> a -> IO (Player a -> Double) #-}
+{-# INLINEABLE one_play_out #-}
 
 -- Choose a move to return once exploration is done: most explored, in
 -- this case
@@ -197,3 +206,4 @@ uct_choose tries substrat g = go tries $ empty_subtree $ moves g where
       (tree', _) <- at_selected_state (one_play_out substrat) g tree
       go (tries_left-1) tree'
 {-# SPECIALIZE uct_choose :: (Game a m, Ord m) => Int -> (a -> IO m) -> a -> IO m #-}
+{-# INLINE uct_choose #-}

@@ -137,21 +137,30 @@ winner (TicTacToe _ xs os)
 instance RGame TicTacToe TicMove where
     type Player TicTacToe = TwoPlayer
     moves = tic_moves
+    {-# INLINE moves #-}
     r_move = default_r_move
+    {-# INLINE r_move #-}
     valid = valid_tic_move
+    {-# INLINE valid #-}
     finished g = not (winner g == Left Nothing)
+    {-# INLINE finished #-}
     payoff g = assess where
         win = winner g
         assess p | win == Right p = Just 1
                  | win == Left Nothing = Nothing
                  | win == Left (Just ()) = Just 0.5
                  | otherwise = Just 0
+    {-# INLINE payoff #-}
     current (TicTacToe p _ _) = p
+    {-# INLINE current #-}
     known_one_move_wins = one_move_wins
+    {-# INLINE known_one_move_wins #-}
     known_one_move_blocks = one_move_win_blocks
+    {-# INLINE known_one_move_blocks #-}
 
 instance Game TicTacToe TicMove where
     move m = tic_move m
+    {-# INLINE move #-}
 
 start :: TicTacToe
 start = TicTacToe Player1 zeroBits zeroBits
