@@ -122,6 +122,8 @@ ucb1_choose tries substrat g = go tries $ empty_level $ moves g where
 -- - The subtree at a key is Nothing if that node has not been expanded
 -- - The latter can happen with a non-zero trial count if that game
 --   is finished.
+-- - The Double is the total score from making that move
+-- - The Int is the number of times we went there
 data UCTree m = UCTree Int (M.Map m (Maybe (UCTree m), Double, Int))
 
 empty_subtree :: (Ord m) => [m] -> UCTree m
