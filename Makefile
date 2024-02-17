@@ -1,8 +1,14 @@
-game-search-exe.pdf:
-	stack build --profile && time stack exec -- game-search-exe 100 200 +RTS -hd && hp2ps game-search-exe.hp && ps2pdf game-search-exe.ps
+tic-tac-toe-heap.pdf:
+	stack build --work-dir .stack-work-prof --trace \
+	  && time stack --work-dir .stack-work-prof exec \
+	    -- tic-tac-toe 20 500 500 +RTS -hd && hp2ps tic-tac-toe.hp \
+	  && ps2pdf tic-tac-toe.ps
 
-game-search-exe.prof:
-	stack build --profile && time stack exec -- game-search-exe 100 200 +RTS -p
+.PHONY: tic-tac-toe.prof
+tic-tac-toe.prof:
+	stack build --work-dir .stack-work-prof --trace --ghc-options="-fno-prof-auto" \
+	  && time stack exec --work-dir .stack-work-prof --trace \
+	    -- tic-tac-toe 20 500 500 +RTS -p
 
 time:
-	stack build && time stack exec game-search-exe 100 200
+	stack build && time stack exec tic-tac-toe 20 500 500

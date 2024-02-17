@@ -106,6 +106,7 @@ place_ok (TicTacToe _ xs os) mask = (mask .&. (xs .|. os)) == zeroBits
 
 tic_moves :: TicTacToe -> [TicMove]
 tic_moves g@(TicTacToe p _ _) = map (TicMove p) $ filter (place_ok g) move_masks
+{-# SCC tic_moves #-}
 
 opponent :: Player -> Player
 opponent Player1 = Player2
@@ -131,6 +132,7 @@ winner (TicTacToe _ xs os)
     | any (flip mask_contains os) win_masks = Right $ Player2
     | popCount (xs .|. os) == board_size = Left $ Just () -- Draw
     | otherwise = Left Nothing
+{-# SCC winner #-}
 
 instance RGame TicTacToe TicMove where
     type Player TicTacToe = TwoPlayer
@@ -176,10 +178,12 @@ one_move_win_masks (TicTacToe Player2 xs os) =
 
 one_move_wins :: TicTacToe -> [TicMove]
 one_move_wins g@(TicTacToe p _ _) = map (TicMove p) $ one_move_win_masks g
+{-# SCC one_move_wins #-}
 
 one_move_win_blocks :: TicTacToe -> [TicMove]
 one_move_win_blocks (TicTacToe p xs os) =
     map (TicMove p) $ one_move_win_masks $ TicTacToe (opponent p) xs os
+{-# SCC one_move_win_blocks #-}
 
 -- Debugging
 

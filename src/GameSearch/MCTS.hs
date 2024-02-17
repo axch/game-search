@@ -45,6 +45,7 @@ uniform_choose g = do
       ms = moves g
       n = length ms
 {-# SPECIALIZE uniform_choose :: (RGame a m) => a -> IO m #-}
+{-# SCC uniform_choose #-}
 
 -- `take_obvious_plays` is a strategy that tries to take or block any
 -- available game-specific one-move wins, and otherwise just picks a
@@ -57,6 +58,7 @@ take_obvious_plays g =
             (m:_) -> return m
             [] -> uniform_choose g
 {-# SPECIALIZE take_obvious_plays :: (RGame a m) => a -> IO m #-}
+{-# SCC take_obvious_plays #-}
 
 -- `play_out` runs a playout, making moves until the end of the game.
 play_out :: (Game a m, Monad r) => (a -> r m) -> a -> r a -- Where the returned state is terminal
@@ -65,6 +67,7 @@ play_out strat = go where
        | otherwise = do m <- strat g
                         go $ move m g
 {-# SPECIALIZE play_out :: (Game a m) => (a -> IO m) -> a -> IO a #-}
+{-# SCC play_out #-}
 
 ----------------------------------------------------------------------
 -- UCB 1
@@ -145,6 +148,7 @@ select_move' (UCTree tot state) = return m where
         + exploration_parameter * sqrt (log (fromIntegral tot) / fromIntegral tries)
     m = fst $ maximumBy (compare `on` value) $ M.toList state
 {-# SPECIALIZE select_move' :: UCTree m -> IO m #-}
+{-# SCC select_move' #-}
 
 -- Choose a game state to evaluate with the given (random) evaluation
 -- function, evaluate it, update the tree, and return the evaluation
@@ -168,6 +172,7 @@ at_selected_state eval g t@(UCTree tot state) = do
            return (UCTree (tot+1) state', win)
 {-# SPECIALIZE at_selected_state :: (Game a m, Ord m) => (a -> IO (Player a -> Double)) -> a -> UCTree m
   -> IO ((UCTree m), (Player a -> Double)) #-}
+{-# SCC at_selected_state #-}
 
 one_play_out :: (Game a m, Monad r) => (a -> r m) -> a -> r (Player a -> Double)
 one_play_out strat g = do
