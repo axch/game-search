@@ -24,19 +24,11 @@ import Data.List (maximumBy)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import GHC.Base (assert)
-import System.Random
 
 import GameSearch.Types
 
 ones :: [Double]
 ones = 1:ones
-
-class Monad r => MonadUnifRandom r where
-    sample :: Int -> Int -> r Int
-
-instance MonadUnifRandom IO where
-    sample lo hi = randomRIO (lo, hi)
-    {-# INLINE sample #-}
 
 -- `uniform_choose` is a strategy that just picks a random legal move
 -- uniformly.

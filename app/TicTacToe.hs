@@ -37,8 +37,8 @@ win_probs n g = render_evaluation (match n (uct_choose 100 uniform_choose `versu
 
 benchmark :: Int -> Int -> Int -> IO ()
 benchmark games budget1 budget2 = render_evaluation (match games strat results) start where
-    strat = uct_choose budget1 (take_obvious_plays uniform_choose)
-            `versus` uct_choose budget2 (take_obvious_plays uniform_choose)
+    strat = uct_choose budget1 (take_obvious_plays uniform)
+            `versus` uct_choose budget2 (take_obvious_plays uniform)
 
 one_game :: Int -> IO ()
 one_game budget = render_one_game (game strat) start where

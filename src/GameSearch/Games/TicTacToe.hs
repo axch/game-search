@@ -32,14 +32,22 @@ module GameSearch.Games.TicTacToe where
 -- Player2 is Os
 
 import Data.Bits
+import Data.Bits.Pdep
 import Data.Char (ord)
 import Data.Maybe
+import GHC.Word
 import Text.Printf (printf)
 
 import GameSearch.Types hiding (Player)
 import qualified GameSearch.Types as Types
 
 type Player = Types.TwoPlayer
+
+-- Bit twiddling
+
+-- Return a mask holding the `i`th set bit of the second argument
+select_mask :: Int -> Mask -> Mask
+select_mask i m = pdep (1 .<<. i) m
 
 -- Configuration
 
@@ -58,10 +66,13 @@ win_length = 5
 
 -- Computed configuration
 
-type Mask = Int
+type Mask = Word64
 
 board_size :: Int
 board_size = board_width * board_height
+
+board_mask :: Mask
+board_mask = bit board_size - 1
 
 move_masks :: [Mask]
 move_masks = map bit [0..(board_size - 1)]
@@ -167,7 +178,7 @@ instance Game TicTacToe TicMove where
 start :: TicTacToe
 start = TicTacToe Player1 zeroBits zeroBits
 
--- Optimizations
+-- Optimization: Find winning moves by scanning wins rather than moves
 
 -- Filter the win masks by non-intersection with the opponent's
 -- positions.
@@ -195,6 +206,20 @@ one_move_win_blocks :: TicTacToe -> [TicMove]
 one_move_win_blocks (TicTacToe p xs os) =
     map (TicMove p) $ one_move_win_masks $ TicTacToe (opponent p) xs os
 {-# SCC one_move_win_blocks #-}
+
+-- Optimization: Select a random move by representing moves as a mask, not [TicMove]
+
+type TicMoves = (TwoPlayer, Mask)
+
+tic_move_set :: TicTacToe -> TicMoves
+tic_move_set (TicTacToe p xs os) = (p, board_mask .&. complement (xs .|. os))
+
+uniform :: (MonadUnifRandom r) => TicTacToe -> r TicMove
+uniform g = do
+  let (p, mvs) = tic_move_set g
+  let n_moves = popCount mvs
+  index <- sample 0 (n_moves - 1)
+  return $ TicMove p $ select_mask index mvs
 
 -- Debugging
 

@@ -26,6 +26,8 @@ import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.Traversable
 
+import System.Random
+
 data Solitaire = Self deriving (Eq, Ord, Show)
 
 data TwoPlayer = Player1 | Player2 deriving (Eq, Ord, Show)
@@ -122,3 +124,12 @@ class (RGame a m) => Game a m where
 
 default_r_move :: (Game a m, Num p) => m -> a -> Probabilities p a
 default_r_move m g = Probabilities [(1, move m g)]
+
+-- An interface for accessing randomness (e.g., from IO)
+
+class Monad r => MonadUnifRandom r where
+    sample :: Int -> Int -> r Int
+
+instance MonadUnifRandom IO where
+    sample lo hi = randomRIO (lo, hi)
+    {-# INLINE sample #-}
