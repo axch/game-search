@@ -1,5 +1,8 @@
 .stack-work
+.stack-work-prof
+stack.yaml.lock
 *.hp
 *.prof
+*.prof.html
 *.ps
 *.pdf
