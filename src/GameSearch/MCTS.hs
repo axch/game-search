@@ -51,17 +51,17 @@ uniform_choose g = do
 {-# INLINE uniform_choose #-}
 {-# SCC uniform_choose #-}
 
--- `take_obvious_plays` is a strategy that tries to take or block any
--- available game-specific one-move wins, and otherwise just picks a
--- random legal move uniformly.
-take_obvious_plays :: (MonadUnifRandom r, RGame a m) => a -> r m
-take_obvious_plays g =
+-- `take_obvious_plays` is a strategy combinator that first tries to
+-- take or block any available game-specific one-move wins, and
+-- otherwise runs its argument.
+take_obvious_plays :: (Monad r, RGame a m) => (a -> r m) -> a -> r m
+take_obvious_plays strat g =
   case known_one_move_wins g of
     (m:_) -> return m
     [] -> case known_one_move_blocks g of
             (m:_) -> return m
-            [] -> uniform_choose g
-{-# SPECIALIZE take_obvious_plays :: (RGame a m) => a -> IO m #-}
+            [] -> strat g
+{-# SPECIALIZE take_obvious_plays :: (RGame a m) => (a -> IO m) -> a -> IO m #-}
 {-# INLINE take_obvious_plays #-}
 {-# SCC take_obvious_plays #-}
 
