@@ -1,9 +1,10 @@
+cabal-version:       2.2
+
 name:                game-search
 version:             0.1.0.0
 synopsis:            Various game-playing programs against a common interface
 description:         Please see README.md
 homepage:            https://github.com/axch/game-search#readme
-license:             Apache
 license-file:        LICENSE
 author:              Alexey Radul
 maintainer:          axch@mit.edu
@@ -11,9 +12,20 @@ copyright:           2017 Alexey Radul
 category:            Game
 build-type:          Simple
 extra-source-files:  README.md
-cabal-version:       >=1.10
+
+flag bmi2
+  description:         Enables BMI2 instructions
+  default:             True
+
+common config
+  default-language:     Haskell2010
+  ghc-options:          -O2 -Wall -Werror
+  if (flag(bmi2)) && (impl(ghc >= 8.4.1))
+    ghc-options:        -mbmi2 -msse4.2
+    cpp-options:        -DBMI2_ENABLED
 
 library
+  import:              config
   hs-source-dirs:      src
   exposed-modules:     GameSearch.Expectimax
                      , GameSearch.MCTS
@@ -23,36 +35,38 @@ library
                      , GameSearch.Games.Talisman
                      , GameSearch.Games.TicTacToe
                      , GameSearch.Umpire
+                     , Data.Bits.Pdep
+                     , Data.Bits.Pdep.Prim
   build-depends:       base >= 4.7 && < 5
-                     , bits-extra
                      , containers
+                     , ghc-prim
                      , lens
                      , mtl
                      , random
                      , syb
                      , transformers
-  ghc-options:         -O2 -fno-ignore-asserts -Wall -Werror
-  default-language:    Haskell2010
+  ghc-options:         -fno-ignore-asserts
 
 executable tic-tac-toe
+  import:              config
   hs-source-dirs:      app
   main-is:             TicTacToe.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2 -Wall -Werror
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , game-search
-  default-language:    Haskell2010
 
 executable talisman-probs
+  import:              config
   hs-source-dirs:      app
   main-is:             TalismanProbs.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2 -Wall -Wno-incomplete-uni-patterns -Werror
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wno-incomplete-uni-patterns
   build-depends:       base
                      , containers
                      , game-search
                      , transformers
-  default-language:    Haskell2010
 
 test-suite game-search-test
+  import:              config
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
@@ -63,8 +77,7 @@ test-suite game-search-test
                      , HUnit
                      , mtl
                      , QuickCheck
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2 -Wall -Wno-orphans -Wno-type-defaults -Werror
-  default-language:    Haskell2010
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wno-orphans -Wno-type-defaults
 
 source-repository head
   type:     git

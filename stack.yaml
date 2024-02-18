@@ -38,20 +38,12 @@ resolver: lts-22.11
 packages:
 - '.'
 
-allow-newer-deps:
-- bits-extra
-
-allow-newer: true
-
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: [
-  bits-extra-0.0.2.0@sha256:9b0e03480b53e0f4396894aa4974822169b154a387a58799f2ebcdc1d6b71407]
+extra-deps: []
 
 # Override default flag values for local packages and extra-deps
-flags:
-  bits-extra:
-   bmi2: true
+flags: {}
 
 # Extra package databases containing global packages
 extra-package-dbs: []

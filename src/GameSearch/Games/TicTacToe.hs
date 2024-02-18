@@ -220,6 +220,7 @@ uniform g = do
   let n_moves = popCount mvs
   index <- sample 0 (n_moves - 1)
   return $ TicMove p $ select_mask index mvs
+{-# SCC uniform #-}
 
 -- Debugging
 
